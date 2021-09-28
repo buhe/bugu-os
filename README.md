@@ -1,16 +1,10 @@
-```
 
-                                                         **                 
-                                                        /**                 
-                                  ******   ******       /**  *****  **    **
-                                 **////** **////     ****** **///**/**   /**
-                                /**   /**//*****    **///**/*******//** /** 
-                                /**   /** /////**  /**  /**/**////  //****  
-                                //******  ******   //******//******  //**   
-                                 //////  //////     //////  //////    //    
-```
-## bugu 
-[![Rust](https://github.com/buhe/bugu/actions/workflows/rust.yml/badge.svg)](https://github.com/buhe/bugu/actions/workflows/rust.yml)
+
+![PNG image 11](https://tva1.sinaimg.cn/large/008i3skNgy1guwqf1l6akj60u00u0wfg02.jpg)
+
+## bugu
+
+##  [![Rust](https://github.com/buhe/bugu/actions/workflows/rust.yml/badge.svg)](https://github.com/buhe/bugu/actions/workflows/rust.yml)
 
 OS experiment
 
