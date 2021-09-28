@@ -17,14 +17,5 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Build OS
-      run: cargo build --verbose
+      run: make build
       working-directory: ./os
-    - name: Run OS tests
-      run: cargo test --verbose
-      working-directory: ./os
-    - name: Build user app
-      run: cargo build --verbose
-      working-directory: ./user
-    - name: Run user app tests
-      run: cargo test --verbose
-      working-directory: ./user
