@@ -1,4 +1,4 @@
-## bugu
+## bugu [![Rust](https://github.com/buhe/bugu/actions/workflows/rust.yml/badge.svg)](https://github.com/buhe/bugu/actions/workflows/rust.yml)
 OS experiment
 
 ## Arch
