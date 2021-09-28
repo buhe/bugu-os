@@ -1,3 +1,3 @@
-fn main() {
-    println!("Hello, world!1");
-}
+#![no_std]
+#![no_main]
+
