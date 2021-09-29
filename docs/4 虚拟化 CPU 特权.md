@@ -72,9 +72,22 @@ fn main() -> i32 {
 
 ### trap
 
-trap 是不是很耳熟，想要特权级切换就要 trap ，我们先来实现 trap 。
+trap 是不是很耳熟，应用要打印就会用 ecall 触发 trap ，我们先来实现 trap 。
 
-那么怎么 trap 呢？就要靠系统调用来触发，应用运行要使用寄存器，于是系统调用前就保存寄存器、之后再恢复，建立 trap/trap.asm，内容是
+先来看 trap 的初始化，trap/mod.rs 的内容
+
+```rust
+pub fn init() {
+    extern "C" {
+        fn __alltraps();
+    }
+    unsafe {
+        stvec::write(__alltraps as usize, TrapMode::Direct);
+    }
+}
+```
+
+这个 init 函数在 main.rs 调用。__alltraps 是什么呢？trap/trap.asm 的内容
 
 ```asm
 .altmacro
@@ -144,8 +157,65 @@ __restore:
 
 ```
 
+__alltraps 都干了什么呢？应用运行要使用寄存器，于是系统调用前就保存寄存器、之后再恢复。sepc 寄存器比较特殊，trap 之后由它来决定后面执行什么。我们也可以利用它来执行第一个应用，一会就看见了。alltraps 最后  call trap_handler ，trap_handler 最后根据 system call id 来决定到底该调用哪个系统调用，这里用的 linux 的系统调用规范，当然也可以用别的，约定好就行。
+
+我们再看看 trap/mod.rs 的最后的内容，包含 trap_handler
+
+```rust
+use riscv::register::{scause::{self, Exception, Trap}, stval, stvec, utvec::TrapMode};
+use trap_ctx::TrapContext;
+
+use crate::scall_sbi::syscall;
+
+mod trap_ctx;
+global_asm!(include_str!("trap.asm"));
+
+pub fn init() {
+    extern "C" {
+        fn __alltraps();
+    }
+    unsafe {
+        stvec::write(__alltraps as usize, TrapMode::Direct);
+    }
+}
+
+#[no_mangle]
+pub fn trap_handler(cx: &mut TrapContext) -> &mut TrapContext {
+    let scause = scause::read();
+    let stval = stval::read();
+    match scause.cause() {
+        Trap::Exception(Exception::UserEnvCall) => {
+            cx.sepc += 4;
+            cx.x[10] = syscall(cx.x[17], [cx.x[10], cx.x[11], cx.x[12]]) as usize;
+        }
+        Trap::Exception(Exception::StoreFault) | Trap::Exception(Exception::StorePageFault) => {
+            println!("[kernel] PageFault in application, core dumped.");
+            panic!(
+                "StoreFault!"
+            );
+        }
+        Trap::Exception(Exception::IllegalInstruction) => {
+            println!("[kernel] IllegalInstruction in application, core dumped.");
+            panic!(
+                "IllegalInstruction!"
+            );
+        }
+        _ => {
+            panic!(
+                "Unsupported trap {:?}, stval = {:#x}!",
+                scause.cause(),
+                stval
+            );
+        }
+    }
+    cx
+}
+```
+
 ### task
 
-## task 加载并执行用户程序。
+那应用第一怎么执行的呢？
+
+## 
 
 （只有一个 app 可以 trap）
