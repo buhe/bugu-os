@@ -31,6 +31,7 @@ $(KERNEL_BIN): kernel
 
 kernel:
 	@echo Platform: $(BOARD)
+	@cd ../user && make build
 	@cargo build --release
 
 clean:
