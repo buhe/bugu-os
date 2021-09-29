@@ -13,7 +13,7 @@ impl Write for STDOUT {
     }
 }
 
-pub fn print(args: fmt::Arguments){
+pub fn print(args: fmt::Arguments) {
     STDOUT.write_fmt(args).unwrap();
 }
 
