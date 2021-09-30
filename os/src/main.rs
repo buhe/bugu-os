@@ -1,10 +1,13 @@
 #![feature(asm)]
 #![feature(global_asm)]
+#![feature(alloc_error_handler)]
 #![no_std]
 #![no_main]
 
+extern crate alloc;
 #[macro_use]
 mod console;
+mod heap;
 mod lang;
 mod scall_sbi;
 mod task;
@@ -24,6 +27,8 @@ fn clear_bss() {
 #[no_mangle]
 extern "C" fn rust_main() -> ! {
     clear_bss();
+    heap::init();
+    heap::heap_test();
     trap::init();
     task::init();
     task::run();
