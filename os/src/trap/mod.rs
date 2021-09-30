@@ -8,7 +8,7 @@ pub use trap_ctx::TrapContext;
 use crate::scall_sbi::syscall;
 
 mod trap_ctx;
-global_asm!(include_str!("trap.S"));
+global_asm!(include_str!("trap.asm"));
 
 pub fn init() {
     extern "C" {
