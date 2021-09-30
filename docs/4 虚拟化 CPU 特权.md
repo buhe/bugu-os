@@ -1,6 +1,6 @@
 ### 特权级
 
-目标是这次也打印 Hello OS 不同的是，在用户态运行的应用。
+目标是这次也打印 Hello OS 不同的是，这是在用户态运行的应用。
 
 为什么需要系统调用？特权？trap？CPU 虚拟化？直接都给权限，都在一个态不香么？试想一个应用就能破坏操作系统，操作系统多脆弱啊。应用有意无意的错误不要影响到操作系统和其他应用，这就需要硬件和操作系统配合来提供特权。应用只能运行在用户态，这样应用就可以放心使用 CPU ，这是 CPU 第一种虚拟化。
 
@@ -87,7 +87,9 @@ pub fn init() {
 }
 ```
 
-这个 init 函数在 main.rs 调用。__alltraps 是什么呢？trap/trap.asm 的内容
+这个 init 函数在 main.rs 调用。
+
+那 __alltraps 是什么呢？trap/trap.asm 的内容
 
 ```asm
 .altmacro
@@ -162,8 +164,12 @@ __alltraps 都干了什么呢？应用运行要使用寄存器，于是系统调
 我们再看看 trap/mod.rs 的最后的内容，包含 trap_handler
 
 ```rust
-use riscv::register::{scause::{self, Exception, Trap}, stval, stvec, utvec::TrapMode};
-use trap_ctx::TrapContext;
+use riscv::register::{
+    scause::{self, Exception, Trap},
+    stval, stvec,
+    utvec::TrapMode,
+};
+pub use trap_ctx::TrapContext;
 
 use crate::scall_sbi::syscall;
 
@@ -190,15 +196,11 @@ pub fn trap_handler(cx: &mut TrapContext) -> &mut TrapContext {
         }
         Trap::Exception(Exception::StoreFault) | Trap::Exception(Exception::StorePageFault) => {
             println!("[kernel] PageFault in application, core dumped.");
-            panic!(
-                "StoreFault!"
-            );
+            panic!("StoreFault!");
         }
         Trap::Exception(Exception::IllegalInstruction) => {
             println!("[kernel] IllegalInstruction in application, core dumped.");
-            panic!(
-                "IllegalInstruction!"
-            );
+            panic!("IllegalInstruction!");
         }
         _ => {
             panic!(
@@ -216,6 +218,107 @@ pub fn trap_handler(cx: &mut TrapContext) -> &mut TrapContext {
 
 那应用第一怎么执行的呢？
 
-## 
+1. 把应用放到内核数据段
+2. 用符号确定应用的位置
+3. 把应用复制到 0x80400000
+4. 应用的内存布局也是 0x80400000 开头，因为内存地址有用到绝对地址
+5. 最后从 0x80400000 开始执行
 
-（只有一个 app 可以 trap）
+
+
+- 1、2 是由 build.rs 根据应用生成的，build.rs 在 cargo build 时候自动调用，生成 link_app.S ，我们看看它
+
+```asm
+		.align 3
+    .section .data
+    .global _num_app
+_num_app:
+    .quad 1
+    .quad app_0_start
+    .quad app_0_end
+
+    .section .data
+    .global app_0_start
+    .global app_0_end
+app_0_start:
+    .incbin "../user/target/riscv64gc-unknown-none-elf/release/hello.bin"
+app_0_end:
+```
+
+可以看到应用在内核的数据段，start 和 end 符号指定了应用的开始和结束地址
+
+- 3 是由 task/mod.rs 的 load_app 函数负责把应用复制到 0x80400000
+
+```rust
+    unsafe fn load_app(&self) {
+        // clear app area
+        (APP_BASE_ADDRESS..APP_BASE_ADDRESS + APP_SIZE_LIMIT).for_each(|addr| {
+            (addr as *mut u8).write_volatile(0);
+        });
+        let app_src = core::slice::from_raw_parts(
+            self.app_start[0] as *const u8,
+            self.app_start[1] - self.app_start[0],
+        );
+        let app_dst = core::slice::from_raw_parts_mut(APP_BASE_ADDRESS as *mut u8, app_src.len());
+        app_dst.copy_from_slice(app_src);
+    }
+```
+
+- 4 是由 user/src/link.ld 指定应用的内存布局，应用的内存布局也是 0x80400000 开头，因为内存地址有用到绝对地址
+
+```
+OUTPUT_ARCH(riscv)
+ENTRY(_start)
+BASE_ADDRESS = 0x80400000;
+
+SECTIONS
+{
+    . = BASE_ADDRESS;
+    .text : {
+        *(.text.entry2)
+        *(.text .text.*)
+    }
+    .rodata : {
+        *(.rodata .rodata.*)
+        *(.srodata .srodata.*)
+    }
+    .data : {
+        *(.data .data.*)
+        *(.sdata .sdata.*)
+    }
+    .bss : {
+        start_bss = .;
+        *(.bss .bss.*)
+        *(.sbss .sbss.*)
+        end_bss = .;
+    }
+    /DISCARD/ : {
+        *(.eh_frame)
+        *(.debug*)
+    }
+}
+```
+
+- 最后我们看看应用是怎么执行的 ，task/mod.rs/run 函数
+
+```rust
+pub fn run() -> ! {
+    unsafe {
+        APP_MANAGER.inner.borrow().load_app();
+    }
+    extern "C" {
+        fn __restore(cx_addr: usize);
+    }
+    unsafe {
+        __restore(KERNEL_STACK.push_context(TrapContext::app_init_context(
+            APP_BASE_ADDRESS,
+            USER_STACK.get_sp(),
+        )) as *const _ as usize);
+    }
+    panic!("Unreachable in task::run!");
+}
+```
+
+__restore 汇编函数会设置 sepc 寄存器的值，sepc 刚好被设置成 0x80400000 ，下一条指令就是 0x80400000 啦。
+
+具体完整代码可参考 https://github.com/buhe/bugu/tree/0.2.0
