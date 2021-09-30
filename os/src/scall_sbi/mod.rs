@@ -8,6 +8,7 @@ fn scall(which: usize, arg0: usize, arg1: usize, arg2: usize) -> usize {
             in ("x12") arg2,
             in("x17") which,
             lateout("x10") ret,
+            options(nostack)
         );
     }
     ret
@@ -23,7 +24,6 @@ pub fn shutdown() -> ! {
 pub fn put_char(c: usize) {
     scall(SBI_CONSOLE_PUTCHAR, c, 0, 0);
 }
-
 
 const SYSCALL_WRITE: usize = 64;
 const SYSCALL_EXIT: usize = 93;

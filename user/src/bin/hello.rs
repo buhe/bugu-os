@@ -7,6 +7,6 @@ extern crate user;
 
 #[no_mangle]
 fn main() -> i32 {
-    println!("Hello OS");
+    println!("Hello OS from app");
     0
 }

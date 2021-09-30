@@ -1,10 +1,14 @@
-use riscv::register::{scause::{self, Exception, Trap}, stval, stvec, utvec::TrapMode};
-use trap_ctx::TrapContext;
+use riscv::register::{
+    scause::{self, Exception, Trap},
+    stval, stvec,
+    utvec::TrapMode,
+};
+pub use trap_ctx::TrapContext;
 
 use crate::scall_sbi::syscall;
 
 mod trap_ctx;
-global_asm!(include_str!("trap.asm"));
+global_asm!(include_str!("trap.S"));
 
 pub fn init() {
     extern "C" {
@@ -26,15 +30,11 @@ pub fn trap_handler(cx: &mut TrapContext) -> &mut TrapContext {
         }
         Trap::Exception(Exception::StoreFault) | Trap::Exception(Exception::StorePageFault) => {
             println!("[kernel] PageFault in application, core dumped.");
-            panic!(
-                "StoreFault!"
-            );
+            panic!("StoreFault!");
         }
         Trap::Exception(Exception::IllegalInstruction) => {
             println!("[kernel] IllegalInstruction in application, core dumped.");
-            panic!(
-                "IllegalInstruction!"
-            );
+            panic!("IllegalInstruction!");
         }
         _ => {
             panic!(

@@ -10,6 +10,7 @@ fn syscall(which: usize, args: [usize; 3]) -> isize {
             in ("x12") args[2],
             in("x17") which,
             lateout("x10") ret,
+            options(nostack)
         );
     }
     ret
