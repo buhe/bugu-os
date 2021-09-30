@@ -321,4 +321,25 @@ pub fn run() -> ! {
 
 __restore 汇编函数会设置 sepc 寄存器的值，sepc 刚好被设置成 0x80400000 ，下一条指令就是 0x80400000 啦。
 
+One more thing. 看看结果
+
+```bash
+[rustsbi] RustSBI version 0.2.0-alpha.3
+.______       __    __      _______.___________.  _______..______   __
+|   _  \     |  |  |  |    /       |           | /       ||   _  \ |  |
+|  |_)  |    |  |  |  |   |   (----`---|  |----`|   (----`|  |_)  ||  |
+|      /     |  |  |  |    \   \       |  |      \   \    |   _  < |  |
+|  |\  \----.|  `--'  |.----)   |      |  |  .----)   |   |  |_)  ||  |
+| _| `._____| \______/ |_______/       |__|  |_______/    |______/ |__|
+
+[rustsbi] Platform: K210 (Version 0.2.0)
+[rustsbi] misa: RV64ACDFIMSU
+[rustsbi] mideleg: 0x22
+[rustsbi] medeleg: 0x1ab
+[rustsbi] Kernel entry: 0x80020000
+[kernel] app_0 [0x8002b018, 0x8002b938)
+Hello OS from app
+[kernel] Application exited with code 0
+```
+
 具体完整代码可参考 https://github.com/buhe/bugu/tree/0.2.0
