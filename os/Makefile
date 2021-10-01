@@ -60,6 +60,6 @@ path:
 	@echo
 	@$(GDB) --version 
 	@echo
-	@$(OPENOCD) --version 
+	@$(OPENOCD) -f ./debug/k210.cfg
 
 .PHONY: build env kernel clean run-inner path
