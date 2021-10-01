@@ -48,4 +48,18 @@ run-inner: build
 	python3 $(K210-BURNER) -p $(K210-SERIALPORT) -b 1500000 $(KERNEL_BIN)
 	python3 -m serial.tools.miniterm --eol LF --dtr 0 --rts 0 --filter direct $(K210-SERIALPORT) 115200
 
-.PHONY: build env kernel clean run-inner
+path:
+	@echo $(BIN)
+	@echo $(INCLUDE)
+	@echo $(LIB)
+	@echo $(GDB)
+	@echo $(OPENOCD)
+
+	@echo
+	@$(BIN)/riscv64-unknown-elf-gcc --version 
+	@echo
+	@$(GDB) --version 
+	@echo
+	@$(OPENOCD) --version 
+
+.PHONY: build env kernel clean run-inner path
