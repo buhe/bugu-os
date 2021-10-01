@@ -13,7 +13,7 @@
                     "GDB": "${config:riscv.gdb}",
                     "OPENOCD": "${config:kendryte.openocd}",
                 },
-                "cwd": "osq"
+                "cwd": "os"
             },
             "group": {
                 "kind": "build",
