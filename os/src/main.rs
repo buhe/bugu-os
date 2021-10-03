@@ -1,8 +1,12 @@
 #![feature(asm)]
 #![feature(global_asm)]
 #![feature(alloc_error_handler)]
+#![feature(custom_test_frameworks)]
+#![test_runner(crate::test_runner)]
 #![no_std]
 #![no_main]
+
+#![reexport_test_harness_main = "test_main"]
 
 extern crate alloc;
 #[macro_use]
@@ -26,6 +30,9 @@ fn clear_bss() {
 
 #[no_mangle]
 extern "C" fn rust_main() -> ! {
+    #[cfg(test)]
+    test_main();
+
     clear_bss();
     heap::init();
     heap::heap_test();
@@ -33,3 +40,12 @@ extern "C" fn rust_main() -> ! {
     task::init();
     task::run();
 }
+
+#[cfg(test)]
+fn test_runner(tests: &[&dyn Fn()]) {
+    println!("1111111Running {} tests", tests.len());
+    for test in tests {
+        test();
+    }
+}
+
