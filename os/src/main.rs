@@ -48,8 +48,3 @@ fn test_runner(tests: &[&dyn Fn()]) {
         test();
     }
 }
-
-#[test_case]
-fn trivial_assertion() {
-    heap::heap_test();
-}
