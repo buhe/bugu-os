@@ -20,6 +20,30 @@
                 "isDefault": true,
             },
             "problemMatcher": "$gcc"
+        },
+        {
+            "label": "run",
+            "type": "shell",
+            "command": "make run",
+            "options": {
+                "cwd": "os"
+            },
+            "group": {
+                "kind": "build",
+                "isDefault": true,
+            },
+        },
+        {
+            "label": "test",
+            "type": "shell",
+            "command": "make test",
+            "options": {
+                "cwd": "os"
+            },
+            "group": {
+                "kind": "build",
+                "isDefault": true,
+            },
         }
     ]
 }
