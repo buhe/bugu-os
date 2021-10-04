@@ -1,7 +1,7 @@
 # Building
 TARGET := riscv64gc-unknown-none-elf
 MODE := debug
-KERNEL_ELF := target/$(TARGET)/$(MODE)/os
+# KERNEL_ELF := target/$(TARGET)/$(MODE)/os
 KERNEL_BIN := $(KERNEL_ELF).bin
 
 # BOARD
@@ -26,15 +26,30 @@ env:
 	rustup component add rust-src
 	rustup component add llvm-tools-preview
 
-$(KERNEL_BIN): kernel
+$(KERNEL_BIN): kernel_for_test
 	@$(OBJCOPY) $(KERNEL_ELF) --strip-all -O binary $@
 
 kernel:
 	@echo Platform: $(BOARD)
 	@cd ../user && make build
-	$(eval KERNEL_ELF := $(shell cargo test --no-run --message-format=json | jq -r "select(.profile.test == true) | .filenames[]"))
+	@cargo build
+
+kernel_for_test:
+	@echo Platform: $(BOARD)
+	@cd ../user && make build
+	$(eval override KERNEL_ELF := $(shell cargo test --no-run --message-format=json | jq -r "select(.profile.test == true) | .filenames[]"))
+
 clean:
 	@cargo clean
+
+test: build
+	(which $(K210-BURNER)) || (cd .. && git clone https://github.com/sipeed/kflash.py.git && mv kflash.py tools)
+	@cp $(BOOTLOADER) $(BOOTLOADER).copy
+	@dd if=$(KERNEL_BIN) of=$(BOOTLOADER).copy bs=$(K210_BOOTLOADER_SIZE) seek=1
+	@mv $(BOOTLOADER).copy $(KERNEL_BIN)
+	@sudo chmod 777 $(K210-SERIALPORT)
+	python3 $(K210-BURNER) -p $(K210-SERIALPORT) -b 1500000 $(KERNEL_BIN)
+	python3 -m serial.tools.miniterm --eol LF --dtr 0 --rts 0 --filter direct $(K210-SERIALPORT) 115200
 
 run: run-inner
 

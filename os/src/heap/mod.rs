@@ -18,7 +18,7 @@ pub fn init() {
 pub fn handle_alloc_error(layout: core::alloc::Layout) -> ! {
     panic!("Heap allocation error, layout = {:?}", layout);
 }
-
+#[test_case]
 pub fn heap_test() {
     use alloc::boxed::Box;
     use alloc::vec::Vec;
