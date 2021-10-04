@@ -1,6 +1,7 @@
 # Building
 TARGET := riscv64gc-unknown-none-elf
 MODE := debug
+KERNEL_ELF := target/$(TARGET)/$(MODE)/os
 KERNEL_BIN := $(KERNEL_ELF).bin
 
 # BOARD
@@ -32,7 +33,6 @@ kernel:
 	@echo Platform: $(BOARD)
 	@cd ../user && make build
 	$(eval KERNEL_ELF := $(shell cargo test --no-run --message-format=json | jq -r "select(.profile.test == true) | .filenames[]"))
-	
 clean:
 	@cargo clean
 
