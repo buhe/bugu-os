@@ -5,7 +5,6 @@
 #![test_runner(crate::test_runner)]
 #![no_std]
 #![no_main]
-
 #![reexport_test_harness_main = "test_main"]
 
 extern crate alloc;
@@ -13,6 +12,7 @@ extern crate alloc;
 mod console;
 mod heap;
 mod lang;
+mod mmu;
 mod scall_sbi;
 mod task;
 mod trap;
@@ -32,6 +32,7 @@ fn clear_bss() {
 extern "C" fn rust_main() -> ! {
     clear_bss();
     heap::init();
+    mmu::init();
     trap::init();
     task::init();
 
