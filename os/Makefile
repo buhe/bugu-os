@@ -32,8 +32,7 @@ kernel:
 	@echo Platform: $(BOARD)
 	@cd ../user && make build
 	$(eval KERNEL_ELF := $(shell cargo test --no-run --message-format=json | jq -r "select(.profile.test == true) | .filenames[]"))
-	@echo hi $(KERNEL_ELF)
-at=human
+	
 clean:
 	@cargo clean
 

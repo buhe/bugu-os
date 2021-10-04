@@ -30,20 +30,20 @@ fn clear_bss() {
 
 #[no_mangle]
 extern "C" fn rust_main() -> ! {
+    clear_bss();
+    heap::init();
+    trap::init();
+    task::init();
+
     #[cfg(test)]
     test_main();
 
-    clear_bss();
-    heap::init();
-    heap::heap_test();
-    trap::init();
-    task::init();
     task::run();
 }
 
 #[cfg(test)]
 fn test_runner(tests: &[&dyn Fn()]) {
-    println!("1111111Running {} tests", tests.len());
+    println!("Running {} tests", tests.len());
     for test in tests {
         test();
     }
@@ -51,7 +51,5 @@ fn test_runner(tests: &[&dyn Fn()]) {
 
 #[test_case]
 fn trivial_assertion() {
-    print!("trivial assertion... ");
-    assert_eq!(1, 1);
-    println!("[ok]");
+    heap::heap_test();
 }
