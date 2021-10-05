@@ -81,4 +81,4 @@ path:
 	@echo
 	@$(OPENOCD) -f ./debug/k210.cfg
 
-.PHONY: build env kernel clean run-inner path
+.PHONY: build env kernel clean run-inner path doc
