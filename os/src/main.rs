@@ -7,6 +7,8 @@
 #![no_main]
 #![reexport_test_harness_main = "test_main"]
 
+use device_tree::DeviceTree;
+
 #[macro_use]
 extern crate bitflags;
 
@@ -47,6 +49,12 @@ extern "C" fn rust_main(hartid: usize, device_tree_paddr: usize) -> ! {
     println!("check magic is 0xd00dfeed, magic is 0x{:x}", magic);
     const DEVICE_TREE_MAGIC: u32 = 0xd00dfeed;
     assert_eq!(magic, DEVICE_TREE_MAGIC);
+    let size = u32::from_be(header.be_size);
+    let _dtb_data = unsafe { core::slice::from_raw_parts(device_tree_paddr as *const u8, size as usize) };
+    // let dt = DeviceTree::load(dtb_data).expect("failed to parse device tree");
+    // DeviceTree::load is not adpator k210
+    println!("dt size is {:#?}", size);
+    
     clear_bss();
     heap::init();
     mmu::init();
