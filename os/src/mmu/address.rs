@@ -1,5 +1,5 @@
-pub const PAGE_SIZE: usize = 0x1000;
-pub const PAGE_SIZE_BITS: usize = 0xc; //12 bit
+use crate::config::{PAGE_SIZE, PAGE_SIZE_BITS};
+
 use super::PageTableEntry;
 use core::fmt::{self, Debug, Formatter};
 

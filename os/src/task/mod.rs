@@ -1,9 +1,7 @@
-use crate::trap::TrapContext;
+use crate::{config::{KERNEL_STACK_SIZE, USER_STACK_SIZE}, trap::TrapContext};
 use core::{cell::RefCell, usize};
 use lazy_static::*;
 
-const USER_STACK_SIZE: usize = 4096 * 2;
-const KERNEL_STACK_SIZE: usize = 4096 * 2;
 const APP_BASE_ADDRESS: usize = 0x80400000;
 const APP_SIZE_LIMIT: usize = 0x20000;
 

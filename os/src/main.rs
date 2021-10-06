@@ -7,6 +7,9 @@
 #![no_main]
 #![reexport_test_harness_main = "test_main"]
 
+#[macro_use]
+extern crate bitflags;
+
 extern crate alloc;
 #[macro_use]
 mod console;
@@ -16,6 +19,7 @@ mod mmu;
 mod scall_sbi;
 mod task;
 mod trap;
+mod config;
 
 global_asm!(include_str!("stack.asm"));
 global_asm!(include_str!("link_app.S"));
