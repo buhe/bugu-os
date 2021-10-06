@@ -1,4 +1,7 @@
-use crate::{config::{KERNEL_STACK_SIZE, USER_STACK_SIZE}, trap::TrapContext};
+use crate::{
+    config::{KERNEL_STACK_SIZE, USER_STACK_SIZE},
+    trap::TrapContext,
+};
 use core::{cell::RefCell, usize};
 use lazy_static::*;
 

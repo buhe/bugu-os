@@ -13,13 +13,13 @@ extern crate bitflags;
 extern crate alloc;
 #[macro_use]
 mod console;
+mod config;
 mod heap;
 mod lang;
 mod mmu;
 mod scall_sbi;
 mod task;
 mod trap;
-mod config;
 
 global_asm!(include_str!("stack.asm"));
 global_asm!(include_str!("link_app.S"));
@@ -35,7 +35,18 @@ fn clear_bss() {
 #[no_mangle]
 extern "C" fn rust_main(hartid: usize, device_tree_paddr: usize) -> ! {
     println!("hart id is {}", hartid);
-    println!("dtb addr is 0x{:X}", device_tree_paddr);
+    println!("dtb addr is 0x{:x}", device_tree_paddr);
+    #[repr(C)]
+    struct DtbHeader {
+        be_magic: u32,
+        be_size: u32,
+    }
+    let header = unsafe { &*(device_tree_paddr as *const DtbHeader) };
+    // from_be 是大小端序的转换（from big endian）
+    let magic = u32::from_be(header.be_magic);
+    println!("check magic is 0xd00dfeed, magic is 0x{:x}", magic);
+    const DEVICE_TREE_MAGIC: u32 = 0xd00dfeed;
+    assert_eq!(magic, DEVICE_TREE_MAGIC);
     clear_bss();
     heap::init();
     mmu::init();
