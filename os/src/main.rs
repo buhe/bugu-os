@@ -7,7 +7,7 @@
 #![no_main]
 #![reexport_test_harness_main = "test_main"]
 
-use device_tree::DeviceTree;
+// use device_tree::DeviceTree;
 
 #[macro_use]
 extern crate bitflags;
