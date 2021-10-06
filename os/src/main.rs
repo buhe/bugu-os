@@ -33,7 +33,9 @@ fn clear_bss() {
 }
 
 #[no_mangle]
-extern "C" fn rust_main() -> ! {
+extern "C" fn rust_main(hartid: usize, device_tree_paddr: usize) -> ! {
+    println!("hart id is {}", hartid);
+    println!("dtb addr is 0x{:X}", device_tree_paddr);
     clear_bss();
     heap::init();
     mmu::init();
