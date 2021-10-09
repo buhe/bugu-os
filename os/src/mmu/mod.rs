@@ -13,4 +13,5 @@ use page_table::{PTEFlags, PageTable};
 
 pub fn init() {
     frame_allocator::init_frame_allocator();
+    KERNEL_SPACE.lock().activate();
 }

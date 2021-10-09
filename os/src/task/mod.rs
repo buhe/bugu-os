@@ -1,54 +1,14 @@
-use crate::{
-    config::{KERNEL_STACK_SIZE, USER_STACK_SIZE},
-    trap::TrapContext,
-};
+use crate::{config::{KERNEL_STACK_SIZE, TRAP_CONTEXT, USER_STACK_SIZE}, mmu::{KERNEL_SPACE, MemorySet, PhysPageNum, VirtAddr}, trap::{TrapContext, trap_handler}};
 use core::{cell::RefCell, usize};
 use lazy_static::*;
-
-const APP_BASE_ADDRESS: usize = 0x80400000;
-const APP_SIZE_LIMIT: usize = 0x20000;
-
-#[repr(align(4096))]
-struct KernelStack {
-    data: [u8; KERNEL_STACK_SIZE],
-}
-
-#[repr(align(4096))]
-struct UserStack {
-    data: [u8; USER_STACK_SIZE],
-}
-
-static KERNEL_STACK: KernelStack = KernelStack {
-    data: [0; KERNEL_STACK_SIZE],
-};
-static USER_STACK: UserStack = UserStack {
-    data: [0; USER_STACK_SIZE],
-};
-
-impl KernelStack {
-    fn get_sp(&self) -> usize {
-        self.data.as_ptr() as usize + KERNEL_STACK_SIZE
-    }
-    pub fn push_context(&self, cx: TrapContext) -> &'static mut TrapContext {
-        let cx_ptr = (self.get_sp() - core::mem::size_of::<TrapContext>()) as *mut TrapContext;
-        unsafe {
-            *cx_ptr = cx;
-        }
-        unsafe { cx_ptr.as_mut().unwrap() }
-    }
-}
-
-impl UserStack {
-    fn get_sp(&self) -> usize {
-        self.data.as_ptr() as usize + USER_STACK_SIZE
-    }
-}
 
 struct AppManager {
     inner: RefCell<AppManagerInner>,
 }
 struct AppManagerInner {
     app_start: [usize; 2],
+    pub token: usize,
+    trap_cx_ppn: PhysPageNum,
 }
 unsafe impl Sync for AppManager {}
 
@@ -60,17 +20,29 @@ impl AppManagerInner {
         );
     }
 
-    unsafe fn load_app(&self) {
+    unsafe fn load_app(&mut self) {
         // clear app area
-        (APP_BASE_ADDRESS..APP_BASE_ADDRESS + APP_SIZE_LIMIT).for_each(|addr| {
-            (addr as *mut u8).write_volatile(0);
-        });
         let app_src = core::slice::from_raw_parts(
             self.app_start[0] as *const u8,
             self.app_start[1] - self.app_start[0],
         );
-        let app_dst = core::slice::from_raw_parts_mut(APP_BASE_ADDRESS as *mut u8, app_src.len());
-        app_dst.copy_from_slice(app_src);
+        // 入口点是从 elf 加载的
+        let (memory_set, user_sp, entry_point) = MemorySet::from_elf(&app_src);
+        // 通过查表, 从虚拟页获得实际的物理页
+        self.trap_cx_ppn = memory_set
+            .translate(VirtAddr::from(TRAP_CONTEXT).into())
+            .unwrap()
+            .ppn();
+        // 因为目前还是单任务, 暂没有 task 和 TaskContext, 只有 trap
+        // 获取 trap context 的指针并赋值
+        let trap_cx = self.trap_cx_ppn.get_mut();
+        *trap_cx = TrapContext::app_init_context(
+            entry_point,
+            user_sp,
+            KERNEL_SPACE.lock().token(),
+            // kernel_stack_top,
+            trap_handler as usize,
+        );
     }
 }
 
@@ -86,7 +58,7 @@ lazy_static! {
             let app_start_raw: &[usize] =
                 unsafe { core::slice::from_raw_parts(num_app_ptr.add(1), num_app + 1) };
             app_start[..=num_app].copy_from_slice(app_start_raw);
-            AppManagerInner { app_start }
+            AppManagerInner { app_start,token: 0, trap_cx_ppn: PhysPageNum(0) }
         }),
     };
 }
@@ -101,16 +73,12 @@ pub fn print_app_info() {
 
 pub fn run() -> ! {
     unsafe {
-        APP_MANAGER.inner.borrow().load_app();
-    }
-    extern "C" {
-        fn __restore(cx_addr: usize);
-    }
-    unsafe {
-        __restore(KERNEL_STACK.push_context(TrapContext::app_init_context(
-            APP_BASE_ADDRESS,
-            USER_STACK.get_sp(),
-        )) as *const _ as usize);
+        APP_MANAGER.inner.borrow_mut().load_app();
     }
     panic!("Unreachable in task::run!");
+}
+
+
+pub fn current_user_token() -> usize {
+    APP_MANAGER.inner.borrow().token
 }
