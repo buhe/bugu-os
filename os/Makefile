@@ -52,8 +52,8 @@ test: env
 
 
 doc:
-	@git add .
-	@git commit -m"update docs"
+	@git add -A
+	@git commit -a -m"update docs"
 	@git push
 
 run: run-inner
