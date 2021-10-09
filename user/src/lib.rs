@@ -10,7 +10,7 @@ mod lang;
 mod scall_os;
 
 #[no_mangle]
-#[link_section = ".text.entry2"]
+#[link_section = ".text.entry"]
 pub extern "C" fn _start() -> ! {
     clear_bss();
     exit(main());
