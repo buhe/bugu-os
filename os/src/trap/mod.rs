@@ -5,11 +5,14 @@ use riscv::register::{
 };
 pub use trap_ctx::TrapContext;
 
-use crate::{config::{TRAMPOLINE, TRAP_CONTEXT}, scall_sbi::syscall, task::{current_trap_cx, current_user_token}};
+use crate::{
+    config::{TRAMPOLINE, TRAP_CONTEXT},
+    scall_sbi::syscall,
+    task::{current_trap_cx, current_user_token},
+};
 
 mod trap_ctx;
 global_asm!(include_str!("trap.asm"));
-
 
 pub fn init() {
     set_kernel_trap_entry();
@@ -37,7 +40,7 @@ pub fn trap_return() -> ! {
         fn __restore();
     }
     let restore_va = __restore as usize - __alltraps as usize + TRAMPOLINE;
-        unsafe {
+    unsafe {
         asm!(
             "fence.i",
             "jr {restore_va}",

@@ -1,4 +1,8 @@
-use crate::{config::{TRAP_CONTEXT, kernel_stack_position}, mmu::{KERNEL_SPACE, MemorySet, PhysPageNum, VirtAddr, MapPermission}, trap::{TrapContext, trap_handler, trap_return}};
+use crate::{
+    config::{kernel_stack_position, TRAP_CONTEXT},
+    mmu::{MapPermission, MemorySet, PhysPageNum, VirtAddr, KERNEL_SPACE},
+    trap::{trap_handler, trap_return, TrapContext},
+};
 use core::{cell::RefCell, usize};
 use lazy_static::*;
 
@@ -38,13 +42,11 @@ impl AppManagerInner {
         // 内核栈单纯用于内核的函数调用
         // map a kernel-stack in kernel space
         let (kernel_stack_bottom, kernel_stack_top) = kernel_stack_position(0);
-        KERNEL_SPACE
-            .lock()
-            .insert_framed_area(
-                kernel_stack_bottom.into(),
-                kernel_stack_top.into(),
-                MapPermission::R | MapPermission::W,
-            );
+        KERNEL_SPACE.lock().insert_framed_area(
+            kernel_stack_bottom.into(),
+            kernel_stack_top.into(),
+            MapPermission::R | MapPermission::W,
+        );
         // 获取 trap context 的指针并赋值
         let trap_cx = self.trap_cx_ppn.get_mut();
         *trap_cx = TrapContext::app_init_context(
@@ -69,7 +71,11 @@ lazy_static! {
             let app_start_raw: &[usize] =
                 unsafe { core::slice::from_raw_parts(num_app_ptr.add(1), num_app + 1) };
             app_start[..=num_app].copy_from_slice(app_start_raw);
-            AppManagerInner { app_start,token: 0, trap_cx_ppn: PhysPageNum(0) }
+            AppManagerInner {
+                app_start,
+                token: 0,
+                trap_cx_ppn: PhysPageNum(0),
+            }
         }),
     };
 }
@@ -90,7 +96,6 @@ pub fn run() -> ! {
     // 调用 restore 启动 app
     trap_return();
 }
-
 
 pub fn current_user_token() -> usize {
     APP_MANAGER.inner.borrow().token
