@@ -25,7 +25,7 @@ __alltraps:
         .set n, n+1
     .endr
     # we can use t0/t1/t2 freely, because they have been saved in TrapContext
-    // 分别保存在 t0 t1
+    // 分别通过在 t0 t1 中转
     csrr t0, sstatus
     csrr t1, sepc
 
