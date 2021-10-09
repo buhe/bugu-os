@@ -1,4 +1,4 @@
-use crate::{config::{KERNEL_STACK_SIZE, TRAP_CONTEXT, USER_STACK_SIZE}, mmu::{KERNEL_SPACE, MemorySet, PhysPageNum, VirtAddr}, trap::{TrapContext, trap_handler}};
+use crate::{config::{TRAP_CONTEXT}, mmu::{KERNEL_SPACE, MemorySet, PhysPageNum, VirtAddr}, trap::{TrapContext, trap_handler, trap_return}};
 use core::{cell::RefCell, usize};
 use lazy_static::*;
 
@@ -72,10 +72,12 @@ pub fn print_app_info() {
 }
 
 pub fn run() -> ! {
+    // 加载 app 到虚拟地址
     unsafe {
         APP_MANAGER.inner.borrow_mut().load_app();
     }
-    panic!("Unreachable in task::run!");
+    // 调用 restore 启动 app
+    trap_return();
 }
 
 
