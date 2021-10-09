@@ -13,6 +13,7 @@ __alltraps:
     csrrw sp, sscratch, sp
     # now sp->*TrapContext in user space, sscratch->user stack
     # save other general purpose registers
+    # sd 是寄存器储存到内存
     sd x1, 1*8(sp)
     # skip sp(x2), we will save it later
     sd x3, 3*8(sp)
@@ -24,8 +25,10 @@ __alltraps:
         .set n, n+1
     .endr
     # we can use t0/t1/t2 freely, because they have been saved in TrapContext
+    // 分别保存在 t0 t1
     csrr t0, sstatus
     csrr t1, sepc
+
     sd t0, 32*8(sp)
     sd t1, 33*8(sp)
     # read user stack from sscratch and save it in TrapContext
@@ -46,13 +49,18 @@ __alltraps:
 __restore:
     # a0: *TrapContext in user space(Constant); a1: user space token
     # switch to user space
+    # 设定页表
     csrw satp, a1
     sfence.vma
     csrw sscratch, a0
+
     mv sp, a0
     # now sp points to TrapContext in user space, start restoring based on it
     # restore sstatus/sepc
+    # ld 是内存加载到寄存器
+    # 33 是 sstatus
     ld t0, 32*8(sp)
+    # 34 是 sepc 也就是入口
     ld t1, 33*8(sp)
     csrw sstatus, t0
     csrw sepc, t1
@@ -65,5 +73,7 @@ __restore:
         .set n, n+1
     .endr
     # back to user stack
+    # 最后加载到 sp , 因为 sp 改变就了其他 ld 就不对了
     ld sp, 2*8(sp)
+    # sret 返回用户态
     sret

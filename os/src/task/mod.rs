@@ -1,4 +1,4 @@
-use crate::{config::{TRAP_CONTEXT}, mmu::{KERNEL_SPACE, MemorySet, PhysPageNum, VirtAddr}, trap::{TrapContext, trap_handler, trap_return}};
+use crate::{config::{TRAP_CONTEXT, kernel_stack_position}, mmu::{KERNEL_SPACE, MemorySet, PhysPageNum, VirtAddr, MapPermission}, trap::{TrapContext, trap_handler, trap_return}};
 use core::{cell::RefCell, usize};
 use lazy_static::*;
 
@@ -34,13 +34,23 @@ impl AppManagerInner {
             .unwrap()
             .ppn();
         // 因为目前还是单任务, 暂没有 task 和 TaskContext, 只有 trap
+        // 内核栈单纯用于内核的函数调用
+        // map a kernel-stack in kernel space
+        let (kernel_stack_bottom, kernel_stack_top) = kernel_stack_position(0);
+        KERNEL_SPACE
+            .lock()
+            .insert_framed_area(
+                kernel_stack_bottom.into(),
+                kernel_stack_top.into(),
+                MapPermission::R | MapPermission::W,
+            );
         // 获取 trap context 的指针并赋值
         let trap_cx = self.trap_cx_ppn.get_mut();
         *trap_cx = TrapContext::app_init_context(
             entry_point,
             user_sp,
             KERNEL_SPACE.lock().token(),
-            // kernel_stack_top,
+            kernel_stack_top,
             trap_handler as usize,
         );
     }

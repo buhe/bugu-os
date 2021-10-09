@@ -6,7 +6,7 @@ pub struct TrapContext {
     pub sstatus: Sstatus,
     pub sepc: usize,
      pub kernel_satp: usize,
-    // pub kernel_sp: usize,
+    pub kernel_sp: usize,
     pub trap_handler: usize,
 }
 
@@ -18,7 +18,7 @@ impl TrapContext {
         entry: usize,
         sp: usize,
         kernel_satp: usize,
-        // kernel_sp: usize,
+        kernel_sp: usize,
         trap_handler: usize,
     ) -> Self {
         let mut sstatus = sstatus::read();
@@ -28,7 +28,7 @@ impl TrapContext {
             sstatus,
             sepc: entry,
             kernel_satp,
-            // kernel_sp,
+            kernel_sp,
             trap_handler,
         };
         cx.set_sp(sp);
