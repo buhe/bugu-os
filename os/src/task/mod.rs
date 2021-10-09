@@ -21,17 +21,14 @@ impl AppManagerInner {
     }
 
     unsafe fn load_app(&mut self) {
-        println!("preload app");
         // clear app area
         let app_src = core::slice::from_raw_parts(
             self.app_start[0] as *const u8,
             self.app_start[1] - self.app_start[0],
         );
-        println!("loaded app");
         // 入口点是从 elf 加载的
         let (memory_set, user_sp, entry_point) = MemorySet::from_elf(&app_src);
         self.token = memory_set.token();
-        println!("loaded elf");
         // 通过查表, 从虚拟页获得实际的物理页
         self.trap_cx_ppn = memory_set
             .translate(VirtAddr::from(TRAP_CONTEXT).into())
@@ -57,7 +54,6 @@ impl AppManagerInner {
             kernel_stack_top,
             trap_handler as usize,
         );
-        println!("loaded TRAP context");
     }
 }
 
@@ -98,4 +94,8 @@ pub fn run() -> ! {
 
 pub fn current_user_token() -> usize {
     APP_MANAGER.inner.borrow().token
+}
+
+pub fn current_trap_cx() -> &'static mut TrapContext {
+    APP_MANAGER.inner.borrow().trap_cx_ppn.get_mut()
 }

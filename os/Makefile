@@ -40,6 +40,7 @@ clean:
 test: env
 	@echo Platform: $(BOARD)
 	@cd ../user && make build
+	@cargo test --no-run
 	$(eval override KERNEL_ELF := $(shell cargo test --no-run --message-format=json | jq -r "select(.profile.test == true) | .filenames[]"))
 	@$(OBJCOPY) $(KERNEL_ELF) --strip-all -O binary $(KERNEL_BIN)
 	(which $(K210-BURNER)) || (cd .. && git clone https://github.com/sipeed/kflash.py.git && mv kflash.py tools)

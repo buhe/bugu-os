@@ -25,11 +25,11 @@ impl TrapContext {
         sstatus.set_spp(SPP::User);
         let mut cx = Self {
             x: [0; 32],
-            sstatus,
-            sepc: entry,
-            kernel_satp,
-            kernel_sp,
-            trap_handler,
+            sstatus,//33
+            sepc: entry,//34
+            kernel_satp,//35
+            kernel_sp,//36
+            trap_handler,//37
         };
         cx.set_sp(sp);
         cx

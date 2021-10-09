@@ -5,7 +5,7 @@ use riscv::register::{
 };
 pub use trap_ctx::TrapContext;
 
-use crate::{config::{TRAMPOLINE, TRAP_CONTEXT}, scall_sbi::syscall, task::current_user_token};
+use crate::{config::{TRAMPOLINE, TRAP_CONTEXT}, scall_sbi::syscall, task::{current_trap_cx, current_user_token}};
 
 mod trap_ctx;
 global_asm!(include_str!("trap.asm"));
@@ -56,10 +56,11 @@ pub fn trap_from_kernel() -> ! {
 }
 
 #[no_mangle]
-pub fn trap_handler(cx: &mut TrapContext) -> ! {
+pub fn trap_handler() -> ! {
     set_kernel_trap_entry();
     let scause = scause::read();
     let stval = stval::read();
+    let cx = current_trap_cx();
     match scause.cause() {
         Trap::Exception(Exception::UserEnvCall) => {
             cx.sepc += 4;
