@@ -40,6 +40,7 @@ clean:
 
 test: env
 	@echo Platform: $(BOARD)
+	@cargo clean
 	@cd ../user && make build
 	@cargo test --no-run
 	$(eval override KERNEL_ELF := $(shell cargo test --no-run --message-format=json | jq -r "select(.profile.test == true) | .filenames[]"))

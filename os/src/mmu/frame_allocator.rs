@@ -109,16 +109,16 @@ fn frame_dealloc(ppn: PhysPageNum) {
     FRAME_ALLOCATOR.lock().dealloc(ppn);
 }
 
-#[allow(unused)]
+#[test_case]
 pub fn frame_allocator_test() {
     let mut v: Vec<FrameTracker> = Vec::new();
-    for i in 0..5 {
+    for _i in 0..5 {
         let frame = frame_alloc().unwrap();
         println!("{:?}", frame);
         v.push(frame);
     }
     v.clear();
-    for i in 0..5 {
+    for _i in 0..5 {
         let frame = frame_alloc().unwrap();
         println!("{:?}", frame);
         v.push(frame);
