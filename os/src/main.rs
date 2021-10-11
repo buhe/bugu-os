@@ -18,11 +18,12 @@ mod console;
 mod config;
 mod heap;
 mod lang;
+mod led;
+mod logo;
 mod mmu;
 mod scall_sbi;
 mod task;
 mod trap;
-mod logo;
 
 global_asm!(include_str!("stack.asm"));
 global_asm!(include_str!("link_app.S"));
@@ -63,7 +64,7 @@ extern "C" fn rust_main(hartid: usize, device_tree_paddr: usize) -> ! {
     mmu::init();
     trap::init();
     task::init();
-
+    led::init();
     #[cfg(test)]
     test_main();
 

@@ -7,7 +7,6 @@ use bump::{BumpAllocator, Locked};
 #[global_allocator]
 static HEAP_ALLOCATOR: Locked<BumpAllocator> = Locked::new(BumpAllocator::new());
 
-
 // #[global_allocator]
 // static HEAP_ALLOCATOR: LockedHeap = LockedHeap::empty();
 
