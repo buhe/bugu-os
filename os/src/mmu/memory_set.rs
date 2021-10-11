@@ -2,7 +2,7 @@ use super::{frame_alloc, FrameTracker};
 use super::{PTEFlags, PageTable, PageTableEntry};
 use super::{PhysAddr, PhysPageNum, VirtAddr, VirtPageNum};
 use super::{StepByOne, VPNRange};
-use crate::config::{MEMORY_END, PAGE_SIZE, TRAMPOLINE, TRAP_CONTEXT, USER_STACK_SIZE};
+use crate::config::{MEMORY_END, MMIO, PAGE_SIZE, TRAMPOLINE, TRAP_CONTEXT, USER_STACK_SIZE};
 use alloc::collections::BTreeMap;
 use alloc::sync::Arc;
 use alloc::vec::Vec;
@@ -133,6 +133,15 @@ impl MemorySet {
             ),
             None,
         );
+
+        for pair in MMIO {
+            memory_set.push(MapArea::new(
+                (*pair).0.into(),
+                ((*pair).0 + (*pair).1).into(),
+                MapType::Identical,
+                MapPermission::R | MapPermission::W,
+            ), None);
+        }
         memory_set
     }
     /// Include sections in elf and trampoline and TrapContext and user stack,
