@@ -16,9 +16,9 @@ extern crate alloc;
 #[macro_use]
 mod console;
 mod config;
+mod driver;
 mod heap;
 mod lang;
-mod led;
 mod logo;
 mod mmu;
 mod scall_sbi;
@@ -64,7 +64,7 @@ extern "C" fn rust_main(_hartid: usize, device_tree_paddr: usize) -> ! {
     mmu::init();
     trap::init();
     task::init();
-    led::init();
+    driver::init();
     #[cfg(test)]
     test_main();
 
