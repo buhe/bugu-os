@@ -37,10 +37,10 @@ fn clear_bss() {
 }
 
 #[no_mangle]
-extern "C" fn rust_main(hartid: usize, device_tree_paddr: usize) -> ! {
+extern "C" fn rust_main(_hartid: usize, device_tree_paddr: usize) -> ! {
     println!("{}", logo::LOGO);
-    println!("hart id is {}", hartid);
-    println!("dtb addr is 0x{:x}", device_tree_paddr);
+    // println!("hart id is {}", hartid);
+    // println!("dtb addr is 0x{:x}", device_tree_paddr);
     #[repr(C)]
     struct DtbHeader {
         be_magic: u32,
