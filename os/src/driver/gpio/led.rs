@@ -4,8 +4,11 @@ use k210_soc::{
 };
 
 pub fn init() {
+    // led b 映射到 gpiohs 0
     fpioa::set_function(io::LED_B, fpioa::function::GPIOHS0);
+    // gpiohs 设置 0 为输出
     gpiohs::set_direction(0, gpio::direction::OUTPUT);
+    // gpiohs 0 为 false , false 为点亮
     gpiohs::set_pin(0, false);
     println!("0 is {}", gpiohs::get_pin(0));
 }
