@@ -2,6 +2,46 @@
     "version": "2.0.0",
     "tasks": [
         {
+            "label": "debug-c",
+            "type": "shell",
+            "command": "make debug-c",
+            "options": {
+                "env": {
+                    "BIN": "${config:riscv.bin}",
+                    "INCLUDE": "${config:riscv.include}",
+                    "LIB": "${config:riscv.lib}",
+                    "GDB": "${config:riscv.gdb}",
+                    "OPENOCD": "${config:kendryte.openocd}",
+                },
+                "cwd": "os"
+            },
+            "group": {
+                "kind": "build",
+                "isDefault": true,
+            },
+            "problemMatcher": "$gcc"
+        },
+        {
+            "label": "debug-s",
+            "type": "shell",
+            "command": "make debug-s",
+            "options": {
+                "env": {
+                    "BIN": "${config:riscv.bin}",
+                    "INCLUDE": "${config:riscv.include}",
+                    "LIB": "${config:riscv.lib}",
+                    "GDB": "${config:riscv.gdb}",
+                    "OPENOCD": "${config:kendryte.openocd}",
+                },
+                "cwd": "os"
+            },
+            "group": {
+                "kind": "build",
+                "isDefault": true,
+            },
+            "problemMatcher": "$gcc"
+        },
+        {
             "label": "build path",
             "type": "shell",
             "command": "make path",
