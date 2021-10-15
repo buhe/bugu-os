@@ -6,13 +6,16 @@
     "configurations": [
         {
             "type": "gdb",
-            "request": "attach",
-            "name": "Attach to gdbserver",
-            "executable": "./target/riscv64gc-unknown-none-elf/debug/os",
-            "target": "localhost:3333",
-            "remote": true,
+            "request": "launch",
+            "name": "debug os",
+            "target": "/Users/buhe/code/gitHub/buguOS/os/target/riscv64gc-unknown-none-elf/debug/os",
             "cwd": "${workspaceRoot}/os",
-            "valuesFormatting": "parseText"
+            "autorun": [
+                "target remote localhost:3333",
+                "monitor reset halt",
+                "load /Users/buhe/code/gitHub/buguOS/os/target/riscv64gc-unknown-none-elf/debug/os"
+            ],
+            "gdbpath": "/Users/buhe/.vscode/extensions/metalcode-eu.darwin-riscv-1.0.3/bin/riscv64-unknown-elf-gdb",
         }
     ]
 }
