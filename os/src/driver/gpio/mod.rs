@@ -1,4 +1,4 @@
-mod led;
+mod led_ex;
 pub fn init() {
-    led::init();
+    led_ex::init();
 }
