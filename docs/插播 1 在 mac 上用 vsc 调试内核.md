@@ -32,3 +32,4 @@ brew install libusb libusb-compat isl libmpc
 /Users/buhe/.vscode/extensions/metalcode-eu.darwin-riscv-1.0.3/bin/riscv64-unknown-elf-gdb
 ```
 
+看一下 k210-stuff
