@@ -1,14 +1,15 @@
 use k210_soc::{
     fpioa::{self, io},
-    gpio, gpiohs,
+    gpio
 };
 
+use crate::driver::gpio::driver;
+
 pub fn init() {
-    // led b 映射到 gpiohs 0
-    fpioa::set_function(io::LED_R, fpioa::function::GPIOHS5);
+    // led b 映射到 gpio 0
+    fpioa::set_function(io::LED_G, fpioa::function::GPIO0);
     // gpiohs 设置 0 为输出
-    gpiohs::set_direction(5, gpio::direction::OUTPUT);
+    driver::set_direction(0, gpio::direction::OUTPUT);
     // gpiohs 0 为 false , false 为点亮
-    gpiohs::set_pin(5, false);
-    println!("0 is {}", gpiohs::get_pin(5));
+    driver::set_pin(0, false);
 }

@@ -11,5 +11,4 @@ pub fn init() {
     gpiohs::set_direction(0, gpio::direction::OUTPUT);
     // gpiohs 0 为 false , false 为点亮
     gpiohs::set_pin(0, false);
-    println!("0 is {}", gpiohs::get_pin(0));
 }

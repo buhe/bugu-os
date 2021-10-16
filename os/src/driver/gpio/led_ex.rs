@@ -17,7 +17,4 @@ pub fn init() {
 
     gpiohs::set_pin(0, false);
     gpiohs::set_pin(1, true);
-    
-    println!("0 is {}", gpiohs::get_pin(0));
-    println!("1 is {}", gpiohs::get_pin(1));
 }
