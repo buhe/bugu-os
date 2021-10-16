@@ -3,8 +3,6 @@
 use k210_soc::gpio;
 use k210_soc::utils::{set_bit,get_bit};
 
-// TODO embedded-hal::digital::v2::{InputPin, OutputPin}
-
 /** Set input/output direction for a GPIOHS pin */
 pub fn set_direction(pin: u8, direction: gpio::direction) {
     unsafe {
@@ -12,9 +10,6 @@ pub fn set_direction(pin: u8, direction: gpio::direction) {
         (*ptr)
             .direction
             .modify(|r, w| w.bits(set_bit(r.bits(), pin, direction == gpio::direction::OUTPUT)));
-        // (*ptr)
-        //     .input_en
-        //     .modify(|r, w| w.bits(set_bit(r.bits(), pin, direction == gpio::direction::INPUT)));
     }
 }
 

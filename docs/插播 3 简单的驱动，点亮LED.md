@@ -11,9 +11,7 @@ for pair in MMIO {
         }
 ```
 
-
-
-实际的 pair 在 config.rs 中，pair.0 是开始地址，pair.1 是范围
+实际的 pair 在 config.rs 中，pair.0 是开始地址，pair.1 是范围，可以在 k210_pac 中看到，地址相同
 
 ```rust
 pub const MMIO: &[(usize, usize)] = &[
@@ -98,5 +96,58 @@ pub fn init() {
 4. 插入 led，注意正负极
 
 ![图像](https://tva1.sinaimg.cn/large/008i3skNgy1gvg5x9jzl7j60u0140dn202.jpg)
+
+### 用 GPIO 驱动 led
+
+```rust
+use k210_soc::{
+    fpioa::{self, io},
+    gpio
+};
+
+use crate::driver::gpio::driver;
+
+pub fn init() {
+    // led b 映射到 gpio 0
+    fpioa::set_function(io::LED_G, fpioa::function::GPIO0);
+    // gpiohs 设置 0 为输出
+    driver::set_direction(0, gpio::direction::OUTPUT);
+    // gpiohs 0 为 false , false 为点亮
+    driver::set_pin(0, false);
+}
+```
+
+```rust
+#![allow(unused)]
+
+use k210_soc::gpio;
+use k210_soc::utils::{set_bit,get_bit};
+
+/** Set input/output direction for a GPIOHS pin */
+pub fn set_direction(pin: u8, direction: gpio::direction) {
+    unsafe {
+        let ptr = k210_pac::GPIO::ptr(); // 就是前面映射的地址
+        (*ptr)
+            .direction
+            .modify(|r, w| w.bits(set_bit(r.bits(), pin, direction == gpio::direction::OUTPUT)));
+    }
+}
+
+/** Set output value for a GPIOHS pin */
+pub fn set_pin(pin: u8, value: bool) {
+    unsafe {
+        let ptr = k210_pac::GPIO::ptr();
+        (*ptr)
+            .data_output
+            .modify(|r, w| w.bits(set_bit(r.bits(), pin, value)));
+    }
+}
+```
+
+因为 k210_soc 项目缺少操作 GPIO 到驱动，我们正好练习写一个 GPIO 驱动
+
+1. 在 driver/gpio/driver.rs 中引入 k210_pac lib 
+2. 模仿 gpiohs 操作数据结构中的 direction 和 data_output
+3. led_gpio.rs 参考 led.rs ，区别是不使用 gpiohs 而使用我们的 driver/gpio/driver.rs 
 
 代码请参考：https://github.com/buhe/bugu/tree/9
