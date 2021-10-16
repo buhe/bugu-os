@@ -1,5 +1,5 @@
-mod led_gpio;
 mod driver;
+mod led_gpio;
 pub fn init() {
     led_gpio::init();
 }

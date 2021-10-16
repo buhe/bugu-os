@@ -1,6 +1,6 @@
 use riscv::register::{
-    scause::{self, Exception, Trap},
-    stval, stvec,
+    scause::{self, Exception, Interrupt, Trap},
+    sie, stval, stvec,
     utvec::TrapMode,
 };
 pub use trap_ctx::TrapContext;
@@ -8,7 +8,11 @@ pub use trap_ctx::TrapContext;
 use crate::{
     config::{TRAMPOLINE, TRAP_CONTEXT},
     scall_sbi::syscall,
-    task::{current_trap_cx, current_user_token},
+    task::{
+        current_trap_cx, current_user_token, exit_current_and_run_next,
+        suspend_current_and_run_next,
+    },
+    timer::set_next_trigger,
 };
 
 mod trap_ctx;
@@ -58,24 +62,34 @@ pub fn trap_from_kernel() -> ! {
     panic!("a trap from kernel!");
 }
 
+pub fn enable_timer_interrupt() {
+    unsafe {
+        sie::set_stimer();
+    }
+}
+
 #[no_mangle]
 pub fn trap_handler() -> ! {
     set_kernel_trap_entry();
+    let cx = current_trap_cx();
     let scause = scause::read();
     let stval = stval::read();
-    let cx = current_trap_cx();
     match scause.cause() {
         Trap::Exception(Exception::UserEnvCall) => {
             cx.sepc += 4;
             cx.x[10] = syscall(cx.x[17], [cx.x[10], cx.x[11], cx.x[12]]) as usize;
         }
         Trap::Exception(Exception::StoreFault) | Trap::Exception(Exception::StorePageFault) => {
-            println!("[kernel] PageFault in application, core dumped.");
-            panic!("StoreFault!");
+            println!("[kernel] PageFault in application, bad addr = {:#x}, bad instruction = {:#x}, core dumped.", stval, cx.sepc);
+            exit_current_and_run_next();
         }
         Trap::Exception(Exception::IllegalInstruction) => {
             println!("[kernel] IllegalInstruction in application, core dumped.");
-            panic!("IllegalInstruction!");
+            exit_current_and_run_next();
+        }
+        Trap::Interrupt(Interrupt::SupervisorTimer) => {
+            set_next_trigger();
+            suspend_current_and_run_next();
         }
         _ => {
             panic!(

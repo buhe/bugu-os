@@ -19,10 +19,12 @@ mod config;
 mod driver;
 mod heap;
 mod lang;
+mod loader;
 mod logo;
 mod mmu;
 mod scall_sbi;
 mod task;
+mod timer;
 mod trap;
 
 global_asm!(include_str!("stack.asm"));
@@ -63,12 +65,15 @@ extern "C" fn rust_main(_hartid: usize, device_tree_paddr: usize) -> ! {
     heap::init();
     mmu::init();
     trap::init();
-    task::init();
     driver::init();
     #[cfg(test)]
     test_main();
 
-    task::run();
+    trap::enable_timer_interrupt();
+    timer::set_next_trigger();
+    task::run_first_task();
+
+    panic!("Unreachable in rust_main!");
 }
 
 #[cfg(test)]

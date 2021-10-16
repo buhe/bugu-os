@@ -1,7 +1,7 @@
 #![allow(unused)]
 
 use k210_soc::gpio;
-use k210_soc::utils::{set_bit,get_bit};
+use k210_soc::utils::{get_bit, set_bit};
 
 /** Set input/output direction for a GPIOHS pin */
 pub fn set_direction(pin: u8, direction: gpio::direction) {

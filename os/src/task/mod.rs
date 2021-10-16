@@ -1,106 +1,138 @@
-use crate::{
-    config::{kernel_stack_position, TRAP_CONTEXT},
-    mmu::{MapPermission, MemorySet, PhysPageNum, VirtAddr, KERNEL_SPACE},
-    trap::{trap_handler, trap_return, TrapContext},
-};
-use core::{cell::RefCell, usize};
+mod context;
+mod switch;
+mod task;
+
+use crate::loader::{get_app_data, get_num_app};
+use crate::trap::TrapContext;
+use alloc::vec::Vec;
+use core::cell::RefCell;
 use lazy_static::*;
+use switch::__switch;
+use task::{TaskControlBlock, TaskStatus};
 
-struct AppManager {
-    inner: RefCell<AppManagerInner>,
-}
-struct AppManagerInner {
-    app_start: [usize; 2],
-    pub token: usize,
-    trap_cx_ppn: PhysPageNum,
-}
-unsafe impl Sync for AppManager {}
+pub use context::TaskContext;
 
-impl AppManagerInner {
-    pub fn print_app_info(&self) {
-        println!(
-            "[kernel] app_{} [{:#x}, {:#x})",
-            0, self.app_start[0], self.app_start[1]
-        );
-    }
-
-    unsafe fn load_app(&mut self) {
-        // clear app area
-        let app_src = core::slice::from_raw_parts(
-            self.app_start[0] as *const u8,
-            self.app_start[1] - self.app_start[0],
-        );
-        // 入口点是从 elf 加载的
-        let (memory_set, user_sp, entry_point) = MemorySet::from_elf(&app_src);
-        self.token = memory_set.token();
-        // 通过查表, 从虚拟页获得实际的物理页
-        self.trap_cx_ppn = memory_set
-            .translate(VirtAddr::from(TRAP_CONTEXT).into())
-            .unwrap()
-            .ppn();
-        // 因为目前还是单任务, 暂没有 task 和 TaskContext, 只有 trap
-        // 内核栈单纯用于内核的函数调用
-        // map a kernel-stack in kernel space
-        let (kernel_stack_bottom, kernel_stack_top) = kernel_stack_position(0);
-        KERNEL_SPACE.lock().insert_framed_area(
-            kernel_stack_bottom.into(),
-            kernel_stack_top.into(),
-            MapPermission::R | MapPermission::W,
-        );
-        // 获取 trap context 的指针并赋值
-        let trap_cx = self.trap_cx_ppn.get_mut();
-        *trap_cx = TrapContext::app_init_context(
-            entry_point,
-            user_sp,
-            KERNEL_SPACE.lock().token(),
-            kernel_stack_top,
-            trap_handler as usize,
-        );
-    }
+pub struct TaskManager {
+    num_app: usize,
+    inner: RefCell<TaskManagerInner>,
 }
+
+struct TaskManagerInner {
+    tasks: Vec<TaskControlBlock>,
+    current_task: usize,
+}
+
+unsafe impl Sync for TaskManager {}
 
 lazy_static! {
-    static ref APP_MANAGER: AppManager = AppManager {
-        inner: RefCell::new({
-            extern "C" {
-                fn _num_app();
-            }
-            let num_app_ptr = _num_app as usize as *const usize;
-            let num_app = unsafe { num_app_ptr.read_volatile() };
-            let mut app_start: [usize; 2] = [0; 2];
-            let app_start_raw: &[usize] =
-                unsafe { core::slice::from_raw_parts(num_app_ptr.add(1), num_app + 1) };
-            app_start[..=num_app].copy_from_slice(app_start_raw);
-            AppManagerInner {
-                app_start,
-                token: 0,
-                trap_cx_ppn: PhysPageNum(0),
-            }
-        }),
+    pub static ref TASK_MANAGER: TaskManager = {
+        println!("init TASK_MANAGER");
+        let num_app = get_num_app();
+        println!("num_app = {}", num_app);
+        let mut tasks: Vec<TaskControlBlock> = Vec::new();
+        for i in 0..num_app {
+            tasks.push(TaskControlBlock::new(get_app_data(i), i));
+        }
+        TaskManager {
+            num_app,
+            inner: RefCell::new(TaskManagerInner {
+                tasks,
+                current_task: 0,
+            }),
+        }
     };
 }
 
-pub fn init() {
-    print_app_info();
-}
-
-pub fn print_app_info() {
-    APP_MANAGER.inner.borrow().print_app_info();
-}
-
-pub fn run() -> ! {
-    // 加载 app 到虚拟地址
-    unsafe {
-        APP_MANAGER.inner.borrow_mut().load_app();
+impl TaskManager {
+    fn run_first_task(&self) {
+        self.inner.borrow_mut().tasks[0].task_status = TaskStatus::Running;
+        let next_task_cx_ptr2 = self.inner.borrow().tasks[0].get_task_cx_ptr2();
+        let _unused: usize = 0;
+        unsafe {
+            __switch(&_unused as *const _, next_task_cx_ptr2);
+        }
     }
-    // 调用 restore 启动 app
-    trap_return();
+
+    fn mark_current_suspended(&self) {
+        let mut inner = self.inner.borrow_mut();
+        let current = inner.current_task;
+        inner.tasks[current].task_status = TaskStatus::Ready;
+    }
+
+    fn mark_current_exited(&self) {
+        let mut inner = self.inner.borrow_mut();
+        let current = inner.current_task;
+        inner.tasks[current].task_status = TaskStatus::Exited;
+    }
+
+    fn find_next_task(&self) -> Option<usize> {
+        let inner = self.inner.borrow();
+        let current = inner.current_task;
+        (current + 1..current + self.num_app + 1)
+            .map(|id| id % self.num_app)
+            .find(|id| inner.tasks[*id].task_status == TaskStatus::Ready)
+    }
+
+    fn get_current_token(&self) -> usize {
+        let inner = self.inner.borrow();
+        let current = inner.current_task;
+        inner.tasks[current].get_user_token()
+    }
+
+    fn get_current_trap_cx(&self) -> &mut TrapContext {
+        let inner = self.inner.borrow();
+        let current = inner.current_task;
+        inner.tasks[current].get_trap_cx()
+    }
+
+    fn run_next_task(&self) {
+        if let Some(next) = self.find_next_task() {
+            let mut inner = self.inner.borrow_mut();
+            let current = inner.current_task;
+            inner.tasks[next].task_status = TaskStatus::Running;
+            inner.current_task = next;
+            let current_task_cx_ptr2 = inner.tasks[current].get_task_cx_ptr2();
+            let next_task_cx_ptr2 = inner.tasks[next].get_task_cx_ptr2();
+            core::mem::drop(inner);
+            unsafe {
+                __switch(current_task_cx_ptr2, next_task_cx_ptr2);
+            }
+        } else {
+            panic!("All applications completed!");
+        }
+    }
+}
+
+pub fn run_first_task() {
+    TASK_MANAGER.run_first_task();
+}
+
+fn run_next_task() {
+    TASK_MANAGER.run_next_task();
+}
+
+fn mark_current_suspended() {
+    TASK_MANAGER.mark_current_suspended();
+}
+
+fn mark_current_exited() {
+    TASK_MANAGER.mark_current_exited();
+}
+
+pub fn suspend_current_and_run_next() {
+    mark_current_suspended();
+    run_next_task();
+}
+
+pub fn exit_current_and_run_next() {
+    mark_current_exited();
+    run_next_task();
 }
 
 pub fn current_user_token() -> usize {
-    APP_MANAGER.inner.borrow().token
+    TASK_MANAGER.get_current_token()
 }
 
 pub fn current_trap_cx() -> &'static mut TrapContext {
-    APP_MANAGER.inner.borrow().trap_cx_ppn.get_mut()
+    TASK_MANAGER.get_current_trap_cx()
 }

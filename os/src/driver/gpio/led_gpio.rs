@@ -1,6 +1,6 @@
 use k210_soc::{
     fpioa::{self, io},
-    gpio
+    gpio,
 };
 
 use crate::driver::gpio::driver;
