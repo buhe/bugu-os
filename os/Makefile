@@ -92,4 +92,7 @@ debug-c:
 	@echo
 	@$(GDB) $(KERNEL_ELF)
 
-.PHONY: build env kernel clean run-inner path doc debug-s debug-c
+connect-serial:
+	screen ${K210-SERIALPORT} 115200
+
+.PHONY: build env kernel clean run-inner path doc debug-s debug-c connect-serial

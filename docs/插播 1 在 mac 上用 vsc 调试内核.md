@@ -11,7 +11,7 @@
 ### 步骤
 
 ```
-brew install libusb libusb-compat isl libmpc
+brew install libusb libusb-compat isl libmpc libftdi
 ```
 
 | library       | description                                                  |

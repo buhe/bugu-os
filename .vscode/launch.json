@@ -8,9 +8,11 @@
             "target": "/Users/buhe/code/gitHub/buguOS/os/target/riscv64gc-unknown-none-elf/debug/os",
             "cwd": "${workspaceRoot}/os",
             "autorun": [
-                "target remote localhost:3333",
-                "monitor reset halt",
-                "load /Users/buhe/code/gitHub/buguOS/os/target/riscv64gc-unknown-none-elf/debug/os"
+                "file /Users/buhe/code/gitHub/buguOS/os/target/riscv64gc-unknown-none-elf/debug/os",
+                "target extended-remote :3333",
+                "load",
+                "monitor reset halt"
+                // "interrupt"
             ],
             "gdbpath": "/Users/buhe/.vscode/extensions/metalcode-eu.darwin-riscv-1.0.3/bin/riscv64-unknown-elf-gdb",
         }

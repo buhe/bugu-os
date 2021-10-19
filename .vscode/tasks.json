@@ -62,6 +62,38 @@
             "problemMatcher": "$gcc"
         },
         {
+            "label": "debug-s",
+            "type": "shell",
+            "command": "make debug-s",
+            "options": {
+                "env": {
+                    "BIN": "${config:riscv.bin}",
+                    "INCLUDE": "${config:riscv.include}",
+                    "LIB": "${config:riscv.lib}",
+                    "GDB": "${config:riscv.gdb}",
+                    "OPENOCD": "${config:kendryte.openocd}",
+                },
+                "cwd": "os"
+            },
+            "group": {
+                "kind": "build",
+                "isDefault": true,
+            },
+            "problemMatcher": "$gcc"
+        },
+        {
+            "label": "connect-serial",
+            "type": "shell",
+            "command": "make connect-serial",
+            "options": {
+                "cwd": "os"
+            },
+            "group": {
+                "kind": "build",
+                "isDefault": true,
+            },
+        },
+        {
             "label": "run",
             "type": "shell",
             "command": "make run",
@@ -81,7 +113,7 @@
                 "cwd": "os"
             },
             "group": {
-                "kind": "test",
+                "kind": "build",
                 "isDefault": true,
             },
         }
