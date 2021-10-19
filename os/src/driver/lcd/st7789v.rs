@@ -1,9 +1,9 @@
 //! ST7789V LCD driver
-use crate::soc::gpio;
-use crate::soc::gpiohs;
-use crate::soc::sleep::usleep;
-use crate::soc::spi::{SPI,work_mode,frame_format,aitm,tmod};
-use crate::soc::dmac::{DMAC,dma_channel};
+use k210_soc::gpio;
+use k210_soc::gpiohs;
+use k210_soc::sleep::usleep;
+use k210_soc::spi::{SPI,work_mode,frame_format,aitm,tmod};
+use k210_soc::dmac::{DMAC,dma_channel};
 
 // These are the values used in the Kendryte SDK but should not ideally be hardcoded here, but
 // defined in the main.rs and passed to the constructor

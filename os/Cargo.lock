@@ -102,6 +102,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "libm"
+version = "0.1.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7fc7aa29613bd6a620df431842069224d8bc9011086b1db4c0e0cd47fa03ec9a"
+
+[[package]]
 name = "log"
 version = "0.4.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -142,6 +148,7 @@ dependencies = [
  "k210-pac",
  "k210-soc",
  "lazy_static",
+ "libm",
  "riscv 0.6.0 (git+https://github.com/rcore-os/riscv)",
  "spin 0.7.1",
  "xmas-elf",
