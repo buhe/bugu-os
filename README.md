@@ -28,7 +28,7 @@ OS lab.
 - IR rev https://detail.tmall.com/item.htm?id=620992587157&spm=a1z09.2.0.0.6c192e8deWmMB8&_u=j2kut2hb4a7
 - LCD https://item.taobao.com/item.htm?spm=a1z09.2.0.0.6c192e8deWmMB8&id=645687481468&_u=j2kut2h72c2
 - network card https://item.taobao.com/item.htm?spm=a1z09.2.0.0.6c192e8deWmMB8&id=583558611341&_u=j2kut2hc8e6
-- debug adater https://item.taobao.com/item.htm?spm=a1z09.2.0.0.6c192e8deWmMB8&id=595953803239&_u=j2kut2h3ba2
+- debugger https://item.taobao.com/item.htm?spm=a1z09.2.0.0.6c192e8deWmMB8&id=595953803239&_u=j2kut2h3ba2
 - k210 https://item.taobao.com/item.htm?spm=a1z09.2.0.0.6c192e8deWmMB8&id=595953803239&_u=j2kut2h3ba2
 - other
   - https://detail.tmall.com/item.htm?id=608757911602&spm=a1z09.2.0.0.6c192e8deWmMB8&_u=j2kut2hb854
