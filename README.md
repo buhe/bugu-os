@@ -36,3 +36,7 @@ OS lab.
   - https://detail.tmall.com/item.htm?id=611609423259&spm=a1z09.2.0.0.6c192e8deWmMB8&_u=j2kut2he4b7
   - https://detail.tmall.com/item.htm?id=609036883221&spm=a1z09.2.0.0.6c192e8deWmMB8&_u=j2kut2h7747&sku_properties=122216547:20213
 
+### Dev environment
+
+- mac intel i7
+
