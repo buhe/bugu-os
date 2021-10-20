@@ -3,7 +3,7 @@ use k210_hal::prelude::*;
 use k210_hal::pac::Peripherals;
 use k210_soc::{dmac::DMACExt, fpioa::{self, io}, sleep::usleep, spi::SPIExt, sysctl::{self, dma_channel}};
 
-use self::{console::{Color, Console}, st7789v::{LCD, LCDHL}};
+use self::{console::{Color, Console, DISP_HEIGHT, DISP_PIXELS, DISP_WIDTH, ScreenImage}, st7789v::{LCD, LCDHL}};
 
 mod st7789v;
 
@@ -36,23 +36,26 @@ pub fn init() {
     lcd.init();
     lcd.set_direction(st7789v::direction::YX_LRUD);
     lcd.clear(lcd_colors::BLUE);
-
+    let mut image: ScreenImage = [0; DISP_PIXELS / 2];
     let mut console: Console =
         Console::new(&cp437::to, &cp437_8x8::FONT, None);
 
     
     /* Make a border */
-    let fg = Color::new(0x80, 0x40, 0x40);
-    let bg = Color::new(0x00, 0x00, 0x00);
+    let fg = Color::new(0x40, 0x40, 0x40);
+    let bg = Color::new(0xff, 0xff, 0xff);
     // Sides
-    for x in 1..console.width() - 10 {
+    for x in 1..console.width() - 1 {
         console.put(x, 0, fg, bg, '─');
-        console.put(x, console.height() - 10, fg, bg, '─');
+        console.put(x, console.height() - 1, fg, bg, '─');
     }
-    for y in 1..console.height() - 10 {
+    for y in 1..console.height() - 1 {
         console.put(0, y, fg, bg, '│');
-        console.put(console.width() - 10, y, fg, bg, '│');
+        console.put(console.width() - 1, y, fg, bg, '│');
     }
+
+    console.render(&mut image);
+    lcd.draw_picture(0, 0, DISP_WIDTH, DISP_HEIGHT, &image);
 }
 
 
