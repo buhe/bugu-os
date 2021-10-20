@@ -75,7 +75,7 @@ dependencies = [
 [[package]]
 name = "k210-pac"
 version = "0.2.0"
-source = "git+https://github.com/buguOS/k210-pac#7fd9400172f127257a2f0d59a35874e89c88587d"
+source = "git+https://github.com/buguOS/k210-pac#a56bf1694084d403969481d4ae48614c6f679004"
 dependencies = [
  "bare-metal",
  "riscv",

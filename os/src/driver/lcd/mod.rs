@@ -18,16 +18,14 @@ mod console;
 
 pub fn init() {
     let p = Peripherals::take().unwrap();
-
     sysctl::pll_set_freq(sysctl::pll::PLL0, 800_000_000).unwrap();
     sysctl::pll_set_freq(sysctl::pll::PLL1, 300_000_000).unwrap();
     sysctl::pll_set_freq(sysctl::pll::PLL2, 45_158_400).unwrap();
     // Configure clocks (TODO)
-    let clocks = k210_hal::clock::Clocks::new();
-
+    // let clocks = k210_hal::clock::Clocks::new();
     // sleep a bit to let clients connect
     usleep(200000);
-
+    
     io_mux_init();
     io_set_power();
 
@@ -37,23 +35,23 @@ pub fn init() {
     let mut lcd = LCD::new(spi, &dmac, dma_channel::CHANNEL0);
     lcd.init();
     lcd.set_direction(st7789v::direction::YX_LRUD);
-    lcd.clear(lcd_colors::PURPLE);
+    lcd.clear(lcd_colors::BLUE);
 
     let mut console: Console =
         Console::new(&cp437::to, &cp437_8x8::FONT, None);
 
     
     /* Make a border */
-    let fg = Color::new(0x40, 0x40, 0x40);
+    let fg = Color::new(0x80, 0x40, 0x40);
     let bg = Color::new(0x00, 0x00, 0x00);
     // Sides
-    for x in 1..console.width() - 1 {
+    for x in 1..console.width() - 10 {
         console.put(x, 0, fg, bg, '─');
-        console.put(x, console.height() - 1, fg, bg, '─');
+        console.put(x, console.height() - 10, fg, bg, '─');
     }
-    for y in 1..console.height() - 1 {
+    for y in 1..console.height() - 10 {
         console.put(0, y, fg, bg, '│');
-        console.put(console.width() - 1, y, fg, bg, '│');
+        console.put(console.width() - 10, y, fg, bg, '│');
     }
 }
 
