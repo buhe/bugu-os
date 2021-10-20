@@ -64,7 +64,7 @@ dependencies = [
 [[package]]
 name = "k210-hal"
 version = "0.2.0"
-source = "git+https://github.com/wyfcyx/k210-hal#795ac3f845fb9e16c6edc03a2f0b9287a622a18d"
+source = "git+https://github.com/buguOS/k210-hal#64317967cd727bcf8cb34ee3b289228ff3e7c2c8"
 dependencies = [
  "bitflags",
  "embedded-hal",
@@ -75,21 +75,21 @@ dependencies = [
 [[package]]
 name = "k210-pac"
 version = "0.2.0"
-source = "git+https://github.com/wyfcyx/k210-pac#8f99c1ca7e1c3b218b725ed133c12186a909f3b1"
+source = "git+https://github.com/buguOS/k210-pac#7fd9400172f127257a2f0d59a35874e89c88587d"
 dependencies = [
  "bare-metal",
- "riscv 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "riscv",
  "vcell",
 ]
 
 [[package]]
 name = "k210-soc"
 version = "0.1.0"
-source = "git+https://github.com/wyfcyx/k210-soc#09a0742c726c461dfd26159ae984c77ea66dd6fd"
+source = "git+https://github.com/buguOS/k210-soc#f3b57036df94cad6510cd16216206a63e906a9bc"
 dependencies = [
  "k210-hal",
  "k210-pac",
- "riscv 0.6.0 (git+https://github.com/rcore-os/riscv)",
+ "riscv",
 ]
 
 [[package]]
@@ -149,7 +149,7 @@ dependencies = [
  "k210-soc",
  "lazy_static",
  "libm",
- "riscv 0.6.0 (git+https://github.com/rcore-os/riscv)",
+ "riscv",
  "spin 0.7.1",
  "xmas-elf",
 ]
@@ -170,17 +170,6 @@ name = "regex-syntax"
 version = "0.6.25"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f497285884f3fcff424ffc933e56d7cbca511def0c9831a7f9b5f6153e3cc89b"
-
-[[package]]
-name = "riscv"
-version = "0.6.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a2f0b705d428e9d0f78e2bb73093887ee58a83c9688de3faedbb4c0631c4618e"
-dependencies = [
- "bare-metal",
- "bit_field",
- "riscv-target",
-]
 
 [[package]]
 name = "riscv"
