@@ -1,6 +1,7 @@
 use core::fmt;
 
-use super::lcd_colors::rgb565;
+use super::{cp437, cp437_8x8};
+use super::lcd_colors::{self, rgb565};
 use super::coord::Coord;
 use super::palette_xterm256::PALETTE;
 
@@ -16,10 +17,13 @@ const GRID_CELLS: usize = (GRID_WIDTH as usize) * (GRID_HEIGHT as usize);
 const DEF_FG: u16 = rgb565(192, 192, 192);
 const DEF_BG: u16 = rgb565(0, 0, 0);
 
+use spin::Mutex;
+
 pub type ScreenImage = [u32; DISP_PIXELS / 2];
-
+use super::st7789v::{self, LCD, LCDHL};
 pub use super::color::Color;
-
+use k210_hal::pac::Peripherals;
+use k210_soc::{dmac::DMACExt, fpioa::{self, io}, sleep::usleep, spi::SPIExt, sysctl::{self, dma_channel}};
 /** Cell flags. */
 #[allow(non_snake_case)]
 pub mod CellFlags {
@@ -66,7 +70,7 @@ enum Sgr {
 /** Visual attributes of console */
 pub struct Console {
     /** Map unicode character to font index and flags word. */
-    map_utf: &'static dyn Fn(char) -> (u16, u16),
+    map_utf: &'static (dyn Fn(char) -> (u16, u16)  + Send +Sync),
     /** Standard font */
     pub font: &'static [[u8; 8]],
     /** Color font */
@@ -95,9 +99,65 @@ pub struct Console {
     num: [u16; 16],
 }
 
+unsafe impl Sync for Console {}
+
 impl Console {
+
+    pub fn init() -> Console {
+        let p = Peripherals::take().unwrap();
+    sysctl::pll_set_freq(sysctl::pll::PLL0, 800_000_000).unwrap();
+    sysctl::pll_set_freq(sysctl::pll::PLL1, 300_000_000).unwrap();
+    sysctl::pll_set_freq(sysctl::pll::PLL2, 45_158_400).unwrap();
+    // Configure clocks (TODO)
+    // let clocks = k210_hal::clock::Clocks::new();
+    // sleep a bit to let clients connect
+    usleep(200000);
+    
+    /* Init SPI IO map and function settings */
+    fpioa::set_function(io::LCD_RST, fpioa::function::gpiohs(st7789v::RST_GPIONUM));
+    fpioa::set_io_pull(io::LCD_RST, fpioa::pull::DOWN); // outputs must be pull-down
+    fpioa::set_function(io::LCD_DC, fpioa::function::gpiohs(st7789v::DCX_GPIONUM));
+    fpioa::set_io_pull(io::LCD_DC, fpioa::pull::DOWN);
+    fpioa::set_function(io::LCD_CS, fpioa::function::SPI0_SS3);
+    fpioa::set_function(io::LCD_WR, fpioa::function::SPI0_SCLK);
+
+    sysctl::set_spi0_dvp_data(true);
+   
+     /* Set dvp and spi pin to 1.8V */
+    sysctl::set_power_mode(sysctl::power_bank::BANK6, sysctl::io_power_mode::V18);
+    sysctl::set_power_mode(sysctl::power_bank::BANK7, sysctl::io_power_mode::V18);
+
+     /* LCD init */
+    let dmac = p.DMAC.configure();
+    let spi = p.SPI0.constrain();
+    let mut lcd = LCD::new(spi, &dmac, dma_channel::CHANNEL0);
+    lcd.init();
+    lcd.set_direction(st7789v::direction::YX_LRUD);
+    lcd.clear(lcd_colors::BLUE);
+    let mut image: ScreenImage = [0; DISP_PIXELS / 2];
+    let mut console: Console =
+        Console::new(&cp437::to, &cp437_8x8::FONT, None);
+
+    
+    /* Make a border */
+    let fg = Color::new(0x40, 0x40, 0x40);
+    let bg = Color::new(0xff, 0xff, 0xff);
+    // Sides
+    for x in 1..console.width() - 1 {
+        console.put(x, 0, fg, bg, '─');
+        console.put(x, console.height() - 1, fg, bg, '─');
+    }
+    for y in 1..console.height() - 1 {
+        console.put(0, y, fg, bg, '│');
+        console.put(console.width() - 1, y, fg, bg, '│');
+    }
+
+    console.render(&mut image);
+    lcd.draw_picture(0, 0, DISP_WIDTH, DISP_HEIGHT, &image);
+    console
+    }
     /** Create new, empty console */
-    pub fn new(map_utf: &'static dyn Fn(char) -> (u16, u16), font: &'static [[u8; 8]], color_font: Option<&'static [[u32; 32]]>) -> Console {
+    pub fn new(map_utf: &'static (dyn Fn(char) -> (u16, u16)  + Send +Sync), font: &'static [[u8; 8]], color_font: Option<&'static [[u32; 32]]>) -> Console {
         Console {
             map_utf, font,
             color_font: color_font.unwrap_or(&[]),
