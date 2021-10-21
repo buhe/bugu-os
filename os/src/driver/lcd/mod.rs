@@ -27,7 +27,7 @@ lazy_static! {
 }
 
 pub fn print_lcd(args: fmt::Arguments) {
-    LCD_DRIVER.lock().write_fmt(args);
+    LCD_DRIVER.lock().write_fmt(args).unwrap();
 }
 
 
