@@ -1,9 +1,9 @@
 //! ST7789V LCD driver
+use k210_soc::dmac::{dma_channel, DMAC};
 use k210_soc::gpio;
 use k210_soc::gpiohs;
 use k210_soc::sleep::usleep;
-use k210_soc::spi::{SPI,work_mode,frame_format,aitm,tmod};
-use k210_soc::dmac::{DMAC,dma_channel};
+use k210_soc::spi::{aitm, frame_format, tmod, work_mode, SPI};
 
 // These are the values used in the Kendryte SDK but should not ideally be hardcoded here, but
 // defined in the main.rs and passed to the constructor
@@ -252,7 +252,8 @@ impl<X: SPI> LCDLL for LCD<'_, X> {
             aitm::AS_FRAME_FORMAT,
             tmod::TRANS,
         );
-        self.spi.send_data_dma(self.dmac, self.channel, self.spi_cs, &[cmd as u32]);
+        self.spi
+            .send_data_dma(self.dmac, self.channel, self.spi_cs, &[cmd as u32]);
     }
 
     fn write_byte(&self, data_buf: &[u32]) {
@@ -268,7 +269,8 @@ impl<X: SPI> LCDLL for LCD<'_, X> {
             aitm::AS_FRAME_FORMAT,
             tmod::TRANS,
         );
-        self.spi.send_data_dma(self.dmac, self.channel, self.spi_cs, data_buf);
+        self.spi
+            .send_data_dma(self.dmac, self.channel, self.spi_cs, data_buf);
     }
 
     fn write_word(&self, data_buf: &[u32]) {
@@ -284,7 +286,8 @@ impl<X: SPI> LCDLL for LCD<'_, X> {
             aitm::AS_FRAME_FORMAT,
             tmod::TRANS,
         );
-        self.spi.send_data_dma(self.dmac, self.channel, self.spi_cs, data_buf);
+        self.spi
+            .send_data_dma(self.dmac, self.channel, self.spi_cs, data_buf);
     }
 
     fn fill_data(&self, data: u32, length: usize) {
@@ -300,7 +303,8 @@ impl<X: SPI> LCDLL for LCD<'_, X> {
             aitm::AS_FRAME_FORMAT,
             tmod::TRANS,
         );
-        self.spi.fill_data_dma(self.dmac, self.channel, self.spi_cs, data, length);
+        self.spi
+            .fill_data_dma(self.dmac, self.channel, self.spi_cs, data, length);
     }
 }
 

@@ -1,9 +1,9 @@
 use core::fmt;
 
-use super::{cp437, cp437_8x8};
-use super::lcd_colors::{self, rgb565};
 use super::coord::Coord;
+use super::lcd_colors::{self, rgb565};
 use super::palette_xterm256::PALETTE;
+use super::{cp437, cp437_8x8};
 
 /** Display width in pixels */
 pub const DISP_WIDTH: u16 = 320;
@@ -20,10 +20,16 @@ const DEF_BG: u16 = rgb565(0, 0, 0);
 use spin::Mutex;
 
 pub type ScreenImage = [u32; DISP_PIXELS / 2];
-use super::st7789v::{self, LCD, LCDHL};
 pub use super::color::Color;
+use super::st7789v::{self, LCD, LCDHL};
 use k210_hal::pac::Peripherals;
-use k210_soc::{dmac::DMACExt, fpioa::{self, io}, sleep::usleep, spi::SPIExt, sysctl::{self, dma_channel}};
+use k210_soc::{
+    dmac::DMACExt,
+    fpioa::{self, io},
+    sleep::usleep,
+    spi::SPIExt,
+    sysctl::{self, dma_channel},
+};
 /** Cell flags. */
 #[allow(non_snake_case)]
 pub mod CellFlags {
@@ -70,7 +76,7 @@ enum Sgr {
 /** Visual attributes of console */
 pub struct Console {
     /** Map unicode character to font index and flags word. */
-    map_utf: &'static (dyn Fn(char) -> (u16, u16)  + Send +Sync),
+    map_utf: &'static (dyn Fn(char) -> (u16, u16) + Send + Sync),
     /** Standard font */
     pub font: &'static [[u8; 8]],
     /** Color font */
@@ -102,64 +108,66 @@ pub struct Console {
 unsafe impl Sync for Console {}
 
 impl Console {
-
     pub fn init() -> Console {
         let p = Peripherals::take().unwrap();
-    sysctl::pll_set_freq(sysctl::pll::PLL0, 800_000_000).unwrap();
-    sysctl::pll_set_freq(sysctl::pll::PLL1, 300_000_000).unwrap();
-    sysctl::pll_set_freq(sysctl::pll::PLL2, 45_158_400).unwrap();
-    // Configure clocks (TODO)
-    // let clocks = k210_hal::clock::Clocks::new();
-    // sleep a bit to let clients connect
-    usleep(200000);
-    
-    /* Init SPI IO map and function settings */
-    fpioa::set_function(io::LCD_RST, fpioa::function::gpiohs(st7789v::RST_GPIONUM));
-    fpioa::set_io_pull(io::LCD_RST, fpioa::pull::DOWN); // outputs must be pull-down
-    fpioa::set_function(io::LCD_DC, fpioa::function::gpiohs(st7789v::DCX_GPIONUM));
-    fpioa::set_io_pull(io::LCD_DC, fpioa::pull::DOWN);
-    fpioa::set_function(io::LCD_CS, fpioa::function::SPI0_SS3);
-    fpioa::set_function(io::LCD_WR, fpioa::function::SPI0_SCLK);
+        sysctl::pll_set_freq(sysctl::pll::PLL0, 800_000_000).unwrap();
+        sysctl::pll_set_freq(sysctl::pll::PLL1, 300_000_000).unwrap();
+        sysctl::pll_set_freq(sysctl::pll::PLL2, 45_158_400).unwrap();
+        // Configure clocks (TODO)
+        // let clocks = k210_hal::clock::Clocks::new();
+        // sleep a bit to let clients connect
+        usleep(200000);
 
-    sysctl::set_spi0_dvp_data(true);
-   
-     /* Set dvp and spi pin to 1.8V */
-    sysctl::set_power_mode(sysctl::power_bank::BANK6, sysctl::io_power_mode::V18);
-    sysctl::set_power_mode(sysctl::power_bank::BANK7, sysctl::io_power_mode::V18);
+        /* Init SPI IO map and function settings */
+        fpioa::set_function(io::LCD_RST, fpioa::function::gpiohs(st7789v::RST_GPIONUM));
+        fpioa::set_io_pull(io::LCD_RST, fpioa::pull::DOWN); // outputs must be pull-down
+        fpioa::set_function(io::LCD_DC, fpioa::function::gpiohs(st7789v::DCX_GPIONUM));
+        fpioa::set_io_pull(io::LCD_DC, fpioa::pull::DOWN);
+        fpioa::set_function(io::LCD_CS, fpioa::function::SPI0_SS3);
+        fpioa::set_function(io::LCD_WR, fpioa::function::SPI0_SCLK);
 
-     /* LCD init */
-    let dmac = p.DMAC.configure();
-    let spi = p.SPI0.constrain();
-    let mut lcd = LCD::new(spi, &dmac, dma_channel::CHANNEL0);
-    lcd.init();
-    lcd.set_direction(st7789v::direction::YX_LRUD);
-    lcd.clear(lcd_colors::BLUE);
-    let mut image: ScreenImage = [0; DISP_PIXELS / 2];
-    let mut console: Console =
-        Console::new(&cp437::to, &cp437_8x8::FONT, None);
+        sysctl::set_spi0_dvp_data(true);
 
-    
-    /* Make a border */
-    let fg = Color::new(0x40, 0x40, 0x40);
-    let bg = Color::new(0xff, 0xff, 0xff);
-    // Sides
-    for x in 1..console.width() - 1 {
-        console.put(x, 0, fg, bg, '─');
-        console.put(x, console.height() - 1, fg, bg, '─');
-    }
-    for y in 1..console.height() - 1 {
-        console.put(0, y, fg, bg, '│');
-        console.put(console.width() - 1, y, fg, bg, '│');
-    }
+        /* Set dvp and spi pin to 1.8V */
+        sysctl::set_power_mode(sysctl::power_bank::BANK6, sysctl::io_power_mode::V18);
+        sysctl::set_power_mode(sysctl::power_bank::BANK7, sysctl::io_power_mode::V18);
 
-    console.render(&mut image);
-    lcd.draw_picture(0, 0, DISP_WIDTH, DISP_HEIGHT, &image);
-    console
+        /* LCD init */
+        let dmac = p.DMAC.configure();
+        let spi = p.SPI0.constrain();
+        let mut lcd = LCD::new(spi, &dmac, dma_channel::CHANNEL0);
+        lcd.init();
+        lcd.set_direction(st7789v::direction::YX_LRUD);
+        lcd.clear(lcd_colors::BLUE);
+        let mut image: ScreenImage = [0; DISP_PIXELS / 2];
+        let mut console: Console = Console::new(&cp437::to, &cp437_8x8::FONT, None);
+
+        /* Make a border */
+        // let fg = Color::new(0x40, 0x40, 0x40);
+        // let bg = Color::new(0xff, 0xff, 0xff);
+        // // Sides
+        // for x in 1..console.width() - 1 {
+        //     console.put(x, 0, fg, bg, '─');
+        //     console.put(x, console.height() - 1, fg, bg, '─');
+        // }
+        // for y in 1..console.height() - 1 {
+        //     console.put(0, y, fg, bg, '│');
+        //     console.put(console.width() - 1, y, fg, bg, '│');
+        // }
+
+        console.render(&mut image);
+        lcd.draw_picture(0, 0, DISP_WIDTH, DISP_HEIGHT, &image);
+        console
     }
     /** Create new, empty console */
-    pub fn new(map_utf: &'static (dyn Fn(char) -> (u16, u16)  + Send +Sync), font: &'static [[u8; 8]], color_font: Option<&'static [[u32; 32]]>) -> Console {
+    pub fn new(
+        map_utf: &'static (dyn Fn(char) -> (u16, u16) + Send + Sync),
+        font: &'static [[u8; 8]],
+        color_font: Option<&'static [[u32; 32]]>,
+    ) -> Console {
         Console {
-            map_utf, font,
+            map_utf,
+            font,
             color_font: color_font.unwrap_or(&[]),
             dirty: false,
             cells: [Cell {
@@ -185,14 +193,17 @@ impl Console {
         let mut image_base = 0;
         let mut cell_idx = 0;
         for y in 0..GRID_HEIGHT {
-            for x in 0..GRID_WIDTH  {
+            for x in 0..GRID_WIDTH {
                 let cell = &self.cells[cell_idx];
                 if (cell.flags & CellFlags::COLOR) != 0 {
                     // glyph is a sequence of 32 (8*4) u32s, encoding two horizontal
                     // pixels each, these are written to the display memory as-is.
                     // TODO: do we want to highlight color font tiles when they're on the
                     // cursor?
-                    let glyph = self.color_font.get(usize::from(cell.ch)).unwrap_or(&[0u32; 32]);
+                    let glyph = self
+                        .color_font
+                        .get(usize::from(cell.ch))
+                        .unwrap_or(&[0u32; 32]);
                     let mut image_ofs = image_base;
                     for yi in 0..8 {
                         for xih in 0..4 {
@@ -210,8 +221,17 @@ impl Console {
                     for yi in 0..8 {
                         let val = glyph[yi];
                         for xih in 0..4 {
-                            image[image_ofs + xih] = (u32::from(if val & (1 << (xih * 2 + 0)) != 0 { fg } else { bg }) << 0) |
-                                                     (u32::from(if val & (1 << (xih * 2 + 1)) != 0 { fg } else { bg }) << 16);
+                            image[image_ofs + xih] =
+                                (u32::from(if val & (1 << (xih * 2 + 0)) != 0 {
+                                    fg
+                                } else {
+                                    bg
+                                }) << 0)
+                                    | (u32::from(if val & (1 << (xih * 2 + 1)) != 0 {
+                                        fg
+                                    } else {
+                                        bg
+                                    }) << 16);
                         }
                         image_ofs += usize::from(DISP_WIDTH) / 2;
                     }
@@ -248,45 +268,69 @@ impl Console {
     /** Raw put */
     pub fn put_raw(&mut self, x: u16, y: u16, fg: u16, bg: u16, ch: u16, flags: u16) {
         self.dirty = true;
-        self.cells[usize::from(y) * usize::from(GRID_WIDTH) + usize::from(x)] = Cell {
-            fg, bg, ch, flags
-        };
+        self.cells[usize::from(y) * usize::from(GRID_WIDTH) + usize::from(x)] =
+            Cell { fg, bg, ch, flags };
     }
 
     /** Handle SGR escape sequence parameters */
     fn handle_sgr(&mut self) {
         let mut state = Sgr::Initial;
         let mut color = Color::new(0, 0, 0);
-        for param in &self.num[0..self.idx+1] {
+        for param in &self.num[0..self.idx + 1] {
             match state {
-                Sgr::Initial => {
-                    match param {
-                        0 => { self.cur_fg = self.def_fg; self.cur_bg = self.def_bg; }
-                        30..=37 => { self.cur_fg = PALETTE[usize::from(param - 30)]; }
-                        38 => { state = Sgr::SpecialFg; }
-                        39 => { self.cur_fg = self.def_fg; }
-                        40..=47 => { self.cur_bg = PALETTE[usize::from(param - 40)]; }
-                        48 => { state = Sgr::SpecialBg; }
-                        49 => { self.cur_bg = self.def_bg; }
-                        90..=97 => { self.cur_fg = PALETTE[usize::from(8 + param - 90)]; }
-                        100..=107 => { self.cur_bg = PALETTE[usize::from(8 + param - 100)]; }
-                        _ => {}
+                Sgr::Initial => match param {
+                    0 => {
+                        self.cur_fg = self.def_fg;
+                        self.cur_bg = self.def_bg;
                     }
-                }
-                Sgr::SpecialFg => {
-                    match param {
-                        2 => { state = Sgr::FgR; }
-                        5 => { state = Sgr::Fg256; }
-                        _ => { state = Sgr::Initial; }
+                    30..=37 => {
+                        self.cur_fg = PALETTE[usize::from(param - 30)];
                     }
-                }
-                Sgr::SpecialBg => {
-                    match param {
-                        2 => { state = Sgr::BgR; }
-                        5 => { state = Sgr::Bg256; }
-                        _ => { state = Sgr::Initial; }
+                    38 => {
+                        state = Sgr::SpecialFg;
                     }
-                }
+                    39 => {
+                        self.cur_fg = self.def_fg;
+                    }
+                    40..=47 => {
+                        self.cur_bg = PALETTE[usize::from(param - 40)];
+                    }
+                    48 => {
+                        state = Sgr::SpecialBg;
+                    }
+                    49 => {
+                        self.cur_bg = self.def_bg;
+                    }
+                    90..=97 => {
+                        self.cur_fg = PALETTE[usize::from(8 + param - 90)];
+                    }
+                    100..=107 => {
+                        self.cur_bg = PALETTE[usize::from(8 + param - 100)];
+                    }
+                    _ => {}
+                },
+                Sgr::SpecialFg => match param {
+                    2 => {
+                        state = Sgr::FgR;
+                    }
+                    5 => {
+                        state = Sgr::Fg256;
+                    }
+                    _ => {
+                        state = Sgr::Initial;
+                    }
+                },
+                Sgr::SpecialBg => match param {
+                    2 => {
+                        state = Sgr::BgR;
+                    }
+                    5 => {
+                        state = Sgr::Bg256;
+                    }
+                    _ => {
+                        state = Sgr::Initial;
+                    }
+                },
                 Sgr::Fg256 => {
                     self.cur_fg = PALETTE[usize::from(param & 0xff)];
                     state = Sgr::Initial;
@@ -295,19 +339,39 @@ impl Console {
                     self.cur_bg = PALETTE[usize::from(param & 0xff)];
                     state = Sgr::Initial;
                 }
-                Sgr::FgR => { color.r = (param & 0xff) as u8; state = Sgr::FgG; }
-                Sgr::FgG => { color.g = (param & 0xff) as u8; state = Sgr::FgB; }
-                Sgr::FgB => { color.b = (param & 0xff) as u8; state = Sgr::Initial; self.cur_fg = color.to_rgb565(); }
-                Sgr::BgR => { color.r = (param & 0xff) as u8; state = Sgr::BgG; }
-                Sgr::BgG => { color.g = (param & 0xff) as u8; state = Sgr::BgB; }
-                Sgr::BgB => { color.b = (param & 0xff) as u8; state = Sgr::Initial; self.cur_bg = color.to_rgb565(); }
+                Sgr::FgR => {
+                    color.r = (param & 0xff) as u8;
+                    state = Sgr::FgG;
+                }
+                Sgr::FgG => {
+                    color.g = (param & 0xff) as u8;
+                    state = Sgr::FgB;
+                }
+                Sgr::FgB => {
+                    color.b = (param & 0xff) as u8;
+                    state = Sgr::Initial;
+                    self.cur_fg = color.to_rgb565();
+                }
+                Sgr::BgR => {
+                    color.r = (param & 0xff) as u8;
+                    state = Sgr::BgG;
+                }
+                Sgr::BgG => {
+                    color.g = (param & 0xff) as u8;
+                    state = Sgr::BgB;
+                }
+                Sgr::BgB => {
+                    color.b = (param & 0xff) as u8;
+                    state = Sgr::Initial;
+                    self.cur_bg = color.to_rgb565();
+                }
             }
         }
     }
 
     /** Handle 'H' or 'f' CSI. */
     fn handle_cup(&mut self) {
-        let param = &self.num[0..self.idx+1];
+        let param = &self.num[0..self.idx + 1];
         let x = param.get(0).unwrap_or(&0);
         let y = param.get(1).unwrap_or(&0);
         self.cursor_pos = Coord::new(x.saturating_sub(1), y.saturating_sub(1));
@@ -317,11 +381,11 @@ impl Console {
     pub fn scroll(&mut self) {
         let gw = usize::from(GRID_WIDTH);
         let gh = usize::from(GRID_HEIGHT);
-        for i in 0..(gh-1)*gw {
+        for i in 0..(gh - 1) * gw {
             self.cells[i] = self.cells[i + gw];
         }
         for i in 0..GRID_WIDTH {
-            self.cells[(gh-1)*gw + usize::from(i)] = Cell {
+            self.cells[(gh - 1) * gw + usize::from(i)] = Cell {
                 fg: self.cur_fg,
                 bg: self.cur_bg,
                 ch: 0,
@@ -338,20 +402,35 @@ impl Console {
     pub fn putch(&mut self, ch: char) {
         match self.state {
             State::Initial => match ch {
-                '\x08' => { // backspace
+                '\x08' => {
+                    // backspace
                     if self.cursor_pos.x > 0 {
                         self.cursor_pos.x -= 1;
-                        self.put_raw(self.cursor_pos.x, self.cursor_pos.y, self.cur_fg, self.cur_bg, 0, 0);
+                        self.put_raw(
+                            self.cursor_pos.x,
+                            self.cursor_pos.y,
+                            self.cur_fg,
+                            self.cur_bg,
+                            0,
+                            0,
+                        );
                     }
                 }
-                '\r' => { self.cursor_pos.x = 0; self.dirty = true; }
+                '\r' => {
+                    self.cursor_pos.x = 0;
+                    self.dirty = true;
+                }
                 '\n' => {
-                    self.cursor_pos.y += 1; self.cursor_pos.x = 0; self.dirty = true;
+                    self.cursor_pos.y += 1;
+                    self.cursor_pos.x = 0;
+                    self.dirty = true;
                     if self.cursor_pos.y == GRID_HEIGHT {
                         self.scroll();
                     }
                 }
-                '\x1b' => { self.state = State::Escape; }
+                '\x1b' => {
+                    self.state = State::Escape;
+                }
                 '\x00'..='\x1f' => {
                     // Unhandled control character, skip it
                 }
@@ -367,18 +446,35 @@ impl Console {
                     }
 
                     let (cell_ch, cell_flags) = (self.map_utf)(ch);
-                    self.put_raw(self.cursor_pos.x, self.cursor_pos.y, self.cur_fg, self.cur_bg, cell_ch, cell_flags);
+                    self.put_raw(
+                        self.cursor_pos.x,
+                        self.cursor_pos.y,
+                        self.cur_fg,
+                        self.cur_bg,
+                        cell_ch,
+                        cell_flags,
+                    );
                     self.cursor_pos.x += 1;
                 }
-            }
+            },
             State::Escape => match ch {
-                '[' => { self.state = State::CSI; self.idx = 0; self.num[0] = 0; }
-                ']' => { self.state = State::Xterm; }
-                _ => { self.state = State::Initial; }
-            }
+                '[' => {
+                    self.state = State::CSI;
+                    self.idx = 0;
+                    self.num[0] = 0;
+                }
+                ']' => {
+                    self.state = State::Xterm;
+                }
+                _ => {
+                    self.state = State::Initial;
+                }
+            },
             State::CSI => match ch {
                 '0'..='9' => {
-                    self.num[self.idx] = self.num[self.idx].wrapping_mul(10).wrapping_add(((ch as u8) - b'0').into());
+                    self.num[self.idx] = self.num[self.idx]
+                        .wrapping_mul(10)
+                        .wrapping_add(((ch as u8) - b'0').into());
                 }
                 ';' => {
                     self.idx += 1;
@@ -409,7 +505,7 @@ impl Console {
                 EscM    Move/scroll window down one line    RI
                 EscE    Move to next line   NEL
                 Esc7    Save cursor position and attributes     DECSC
-                Esc8    Restore cursor position and attributes  DECSC 
+                Esc8    Restore cursor position and attributes  DECSC
                 */
                 'H' | 'f' => {
                     self.handle_cup();
@@ -418,15 +514,15 @@ impl Console {
                 _ => {
                     self.state = State::Initial;
                 }
-            }
+            },
             // This sets window title and such, we can't do anything with this information so
             // ignore until the BEL
             State::Xterm => match ch {
-                    '\x07' => {
-                        self.state = State::Initial;
-                    }
-                    _ => { }
-            }
+                '\x07' => {
+                    self.state = State::Initial;
+                }
+                _ => {}
+            },
         }
     }
 
@@ -440,6 +536,12 @@ impl Console {
 
 /** Formatting adoption for console */
 impl fmt::Write for Console {
-    fn write_str(&mut self, s: &str) -> Result<(), fmt::Error> { self.puts(s); Ok(()) }
-    fn write_char(&mut self, c: char) -> Result<(), fmt::Error> { self.putch(c); Ok(()) }
+    fn write_str(&mut self, s: &str) -> Result<(), fmt::Error> {
+        self.puts(s);
+        Ok(())
+    }
+    fn write_char(&mut self, c: char) -> Result<(), fmt::Error> {
+        self.putch(c);
+        Ok(())
+    }
 }

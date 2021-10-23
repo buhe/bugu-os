@@ -34,9 +34,7 @@ const ALMOST_64: f32 = 63.999996f32;
 
 /** Truncate 32 bit RGB to RBG565 */
 pub fn rgbf565(r: f32, g: f32, b: f32) -> u16 {
-    (((r * ALMOST_32) as u16) << 11) |
-      (((g * ALMOST_64) as u16) << 5) |
-      ((b * ALMOST_32) as u16)
+    (((r * ALMOST_32) as u16) << 11) | (((g * ALMOST_64) as u16) << 5) | ((b * ALMOST_32) as u16)
 }
 
 /** HSV to RGB. `h` is 0.0..360.0, `s` and `v` are 0.0..1.0 output RGB will be 0.0..1.0 (all ranges

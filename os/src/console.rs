@@ -14,8 +14,8 @@ impl Write for STDOUT {
 }
 
 pub fn print(args: fmt::Arguments) {
-    STDOUT.write_fmt(args).unwrap();
-    // print_lcd(args);
+    // STDOUT.write_fmt(args).unwrap();
+    print_lcd(args);
 }
 
 #[macro_export]
