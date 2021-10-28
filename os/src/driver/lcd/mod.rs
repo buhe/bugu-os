@@ -1,7 +1,9 @@
+use k210_pac::SPI0;
 use lazy_static::*;
 use k210_hal::prelude::*;
 use k210_hal::pac::Peripherals;
-use k210_soc::{dmac::DMACExt, fpioa::{self, io}, sleep::usleep, spi::SPIExt, sysctl::{self, dma_channel}};
+use k210_soc::{dmac::DMACExt, fpioa::{self, io}, sleep::usleep, spi::{SPIExt, SPIImpl}, sysctl::{self, dma_channel}};
+use spin::Mutex;
 
 use self::{console::{Color, Console, DISP_HEIGHT, DISP_PIXELS, DISP_WIDTH, ScreenImage}, st7789v::{LCD, LCDHL}};
 
@@ -17,46 +19,14 @@ mod cp437_8x8;
 mod console;
 
 pub fn init() {
-    let p = Peripherals::take().unwrap();
-    sysctl::pll_set_freq(sysctl::pll::PLL0, 800_000_000).unwrap();
-    sysctl::pll_set_freq(sysctl::pll::PLL1, 300_000_000).unwrap();
-    sysctl::pll_set_freq(sysctl::pll::PLL2, 45_158_400).unwrap();
-    // Configure clocks (TODO)
-    // let clocks = k210_hal::clock::Clocks::new();
-    // sleep a bit to let clients connect
-    usleep(200000);
     
-    io_mux_init();
-    io_set_power();
-
-     /* LCD init */
-    let dmac = p.DMAC.configure();
-    let spi = p.SPI0.constrain();
-    let mut lcd = LCD::new(spi, dmac, dma_channel::CHANNEL0);
-    lcd.init();
-    lcd.set_direction(st7789v::direction::YX_LRUD);
-    lcd.clear(lcd_colors::BLUE);
-
+    DRIVER.lock();
     let mut image: ScreenImage = [0; DISP_PIXELS / 2];
-    let mut console: Console =
-        Console::new(&cp437_8x8::FONT, None);
+ 
 
-    
-    /* Make a border */
-    let fg = Color::new(0x80, 0x40, 0x40);
-    let bg = Color::new(0x00, 0x00, 0x00);
-    // Sides
-    for x in 1..console.width() - 1 {
-        console.put(x, 0, fg, bg, '─');
-        console.put(x, console.height() - 1, fg, bg, '─');
-    }
-    for y in 1..console.height() - 1 {
-        console.put(0, y, fg, bg, '│');
-        console.put(console.width() - 1, y, fg, bg, '│');
-    }
-
-        console.render(&mut image);// render 会导致不执行 task
-        lcd.draw_picture(0, 0, DISP_WIDTH, DISP_HEIGHT, &image);
+        CONSOLE.lock().render(&mut image);// render 会导致不执行 task
+        DRIVER.lock().flush(&image);
+        // lcd.draw_picture(0, 0, DISP_WIDTH, DISP_HEIGHT, &image);
 }
 
 
@@ -81,5 +51,45 @@ fn io_set_power() {
 }
 
 lazy_static!{
+    pub static ref CONSOLE: Mutex<Console> = {
+        let mut console: Console =
+                Console::new(&cp437_8x8::FONT, None);
 
+            /* Make a border */
+            let fg = Color::new(0x80, 0x40, 0x40);
+            let bg = Color::new(0x00, 0x00, 0x00);
+            // Sides
+            for x in 1..console.width() - 1 {
+                console.put(x, 0, fg, bg, '─');
+                console.put(x, console.height() - 1, fg, bg, '─');
+            }
+            for y in 1..console.height() - 1 {
+                console.put(0, y, fg, bg, '│');
+                console.put(console.width() - 1, y, fg, bg, '│');
+            }
+            
+            Mutex::new(console)
+    };
+    pub static ref DRIVER: Mutex<LCD<SPIImpl<SPI0>>> = {
+        let p = Peripherals::take().unwrap();
+    sysctl::pll_set_freq(sysctl::pll::PLL0, 800_000_000).unwrap();
+    sysctl::pll_set_freq(sysctl::pll::PLL1, 300_000_000).unwrap();
+    sysctl::pll_set_freq(sysctl::pll::PLL2, 45_158_400).unwrap();
+    // Configure clocks (TODO)
+    // let clocks = k210_hal::clock::Clocks::new();
+    // sleep a bit to let clients connect
+    usleep(200000);
+    
+    io_mux_init();
+    io_set_power();
+
+     /* LCD init */
+    let dmac = p.DMAC.configure();
+    let spi = p.SPI0.constrain();
+    let mut lcd = LCD::new(spi, dmac, dma_channel::CHANNEL0);
+    lcd.init();
+    lcd.set_direction(st7789v::direction::YX_LRUD);
+    lcd.clear(lcd_colors::BLUE);
+        Mutex::new(lcd)
+    };
 }

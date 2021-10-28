@@ -5,6 +5,10 @@ use k210_soc::sleep::usleep;
 use k210_soc::spi::{SPI,work_mode,frame_format,aitm,tmod};
 use k210_soc::dmac::{DMAC,dma_channel};
 
+use super::console::DISP_HEIGHT;
+use super::console::DISP_WIDTH;
+use super::console::ScreenImage;
+
 // These are the values used in the Kendryte SDK but should not ideally be hardcoded here, but
 // defined in the main.rs and passed to the constructor
 // (they're arbitrarily configurable by setting
@@ -173,6 +177,10 @@ impl<X: SPI> LCD<X> {
             width: 0,
             height: 0,
         }
+    }
+
+    pub fn flush(&self, image: &ScreenImage){
+        self.draw_picture(0, 0, DISP_WIDTH, DISP_HEIGHT, image);
     }
 
     fn init_dcx(&self) {
