@@ -124,12 +124,12 @@ pub enum direction {
 pub const DIR_XY_MASK: u8 = 0x20;
 pub const DIR_MASK: u8 = 0xE0;
 
-pub struct LCD<'a, SPI> {
+pub struct LCD<SPI> {
     spi: SPI,
     spi_cs: u32,
     dcx_gpionum: u8,
     rst_gpionum: u8,
-    dmac: &'a DMAC,
+    dmac: DMAC,
     channel: dma_channel,
     pub width: u16,
     pub height: u16,
@@ -161,8 +161,8 @@ pub trait LCDHL {
     fn shutdown(&mut self);
 }
 
-impl<'a, X: SPI> LCD<'a, X> {
-    pub fn new(spi: X, dmac: &'a DMAC, channel: dma_channel) -> Self {
+impl<X: SPI> LCD<X> {
+    pub fn new(spi: X, dmac: DMAC, channel: dma_channel) -> Self {
         Self {
             spi,
             spi_cs: SPI_CS,
@@ -219,7 +219,7 @@ impl<'a, X: SPI> LCD<'a, X> {
 }
 
 /** Low-level functions */
-impl<X: SPI> LCDLL for LCD<'_, X> {
+impl<X: SPI> LCDLL for LCD<X> {
     fn hard_init(&self) {
         self.init_dcx();
         self.init_rst();
@@ -252,7 +252,7 @@ impl<X: SPI> LCDLL for LCD<'_, X> {
             aitm::AS_FRAME_FORMAT,
             tmod::TRANS,
         );
-        self.spi.send_data_dma(self.dmac, self.channel, self.spi_cs, &[cmd as u32]);
+        self.spi.send_data_dma(&self.dmac, self.channel, self.spi_cs, &[cmd as u32]);
     }
 
     fn write_byte(&self, data_buf: &[u32]) {
@@ -268,7 +268,7 @@ impl<X: SPI> LCDLL for LCD<'_, X> {
             aitm::AS_FRAME_FORMAT,
             tmod::TRANS,
         );
-        self.spi.send_data_dma(self.dmac, self.channel, self.spi_cs, data_buf);
+        self.spi.send_data_dma(&self.dmac, self.channel, self.spi_cs, data_buf);
     }
 
     fn write_word(&self, data_buf: &[u32]) {
@@ -284,7 +284,7 @@ impl<X: SPI> LCDLL for LCD<'_, X> {
             aitm::AS_FRAME_FORMAT,
             tmod::TRANS,
         );
-        self.spi.send_data_dma(self.dmac, self.channel, self.spi_cs, data_buf);
+        self.spi.send_data_dma(&self.dmac, self.channel, self.spi_cs, data_buf);
     }
 
     fn fill_data(&self, data: u32, length: usize) {
@@ -300,12 +300,12 @@ impl<X: SPI> LCDLL for LCD<'_, X> {
             aitm::AS_FRAME_FORMAT,
             tmod::TRANS,
         );
-        self.spi.fill_data_dma(self.dmac, self.channel, self.spi_cs, data, length);
+        self.spi.fill_data_dma(&self.dmac, self.channel, self.spi_cs, data, length);
     }
 }
 
 /* High-level functions */
-impl<X: SPI> LCDHL for LCD<'_, X> {
+impl<X: SPI> LCDHL for LCD<X> {
     fn init(&mut self) {
         self.hard_init();
         /*soft reset*/

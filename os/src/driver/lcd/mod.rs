@@ -1,9 +1,9 @@
-
+use lazy_static::*;
 use k210_hal::prelude::*;
 use k210_hal::pac::Peripherals;
 use k210_soc::{dmac::DMACExt, fpioa::{self, io}, sleep::usleep, spi::SPIExt, sysctl::{self, dma_channel}};
 
-use self::{console::{Color, Console}, st7789v::{LCD, LCDHL}};
+use self::{console::{Color, Console, DISP_HEIGHT, DISP_PIXELS, DISP_WIDTH, ScreenImage}, st7789v::{LCD, LCDHL}};
 
 mod st7789v;
 
@@ -32,27 +32,31 @@ pub fn init() {
      /* LCD init */
     let dmac = p.DMAC.configure();
     let spi = p.SPI0.constrain();
-    let mut lcd = LCD::new(spi, &dmac, dma_channel::CHANNEL0);
+    let mut lcd = LCD::new(spi, dmac, dma_channel::CHANNEL0);
     lcd.init();
     lcd.set_direction(st7789v::direction::YX_LRUD);
     lcd.clear(lcd_colors::BLUE);
 
+    let mut image: ScreenImage = [0; DISP_PIXELS / 2];
     let mut console: Console =
-        Console::new(&cp437::to, &cp437_8x8::FONT, None);
+        Console::new(&cp437_8x8::FONT, None);
 
     
     /* Make a border */
     let fg = Color::new(0x80, 0x40, 0x40);
     let bg = Color::new(0x00, 0x00, 0x00);
     // Sides
-    for x in 1..console.width() - 10 {
+    for x in 1..console.width() - 1 {
         console.put(x, 0, fg, bg, '─');
-        console.put(x, console.height() - 10, fg, bg, '─');
+        console.put(x, console.height() - 1, fg, bg, '─');
     }
-    for y in 1..console.height() - 10 {
+    for y in 1..console.height() - 1 {
         console.put(0, y, fg, bg, '│');
-        console.put(console.width() - 10, y, fg, bg, '│');
+        console.put(console.width() - 1, y, fg, bg, '│');
     }
+
+        console.render(&mut image);// render 会导致不执行 task
+        lcd.draw_picture(0, 0, DISP_WIDTH, DISP_HEIGHT, &image);
 }
 
 
@@ -74,4 +78,8 @@ fn io_set_power() {
     /* Set dvp and spi pin to 1.8V */
     sysctl::set_power_mode(sysctl::power_bank::BANK6, sysctl::io_power_mode::V18);
     sysctl::set_power_mode(sysctl::power_bank::BANK7, sysctl::io_power_mode::V18);
+}
+
+lazy_static!{
+
 }
