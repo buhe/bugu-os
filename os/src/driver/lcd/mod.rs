@@ -1,3 +1,5 @@
+use core::fmt;
+
 use k210_pac::SPI0;
 use lazy_static::*;
 use k210_hal::prelude::*;
@@ -21,12 +23,6 @@ mod console;
 pub fn init() {
     
     DRIVER.lock();
-    let mut image: ScreenImage = [0; DISP_PIXELS / 2];
- 
-
-        CONSOLE.lock().render(&mut image);// render 会导致不执行 task
-        DRIVER.lock().flush(&image);
-        // lcd.draw_picture(0, 0, DISP_WIDTH, DISP_HEIGHT, &image);
 }
 
 
@@ -92,4 +88,12 @@ lazy_static!{
     lcd.clear(lcd_colors::BLUE);
         Mutex::new(lcd)
     };
+}
+
+pub fn print_with_lcd(args: fmt::Arguments){
+    let mut image: ScreenImage = [0; DISP_PIXELS / 2];
+    CONSOLE.lock().write_fmt(args).unwrap();
+
+    CONSOLE.lock().render(&mut image);// render 会导致不执行 task
+    DRIVER.lock().flush(&image);
 }
