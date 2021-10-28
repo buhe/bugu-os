@@ -1,6 +1,6 @@
 use core::fmt::{self, Write};
 
-use crate::{driver::print_lcd, scall_sbi::put_char};
+use crate::{driver::print_with_lcd, scall_sbi::put_char};
 
 struct STDOUT;
 
@@ -15,7 +15,7 @@ impl Write for STDOUT {
 
 pub fn print(args: fmt::Arguments) {
     // STDOUT.write_fmt(args).unwrap();
-    print_lcd(args);
+    print_with_lcd(args);
 }
 
 #[macro_export]
