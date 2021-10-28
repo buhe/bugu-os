@@ -19,7 +19,7 @@ mod cp437;
 mod cp437_8x8;
 // 用 LCD 输出
 mod console;
-
+  static mut image: ScreenImage = [0; DISP_PIXELS / 2];
 pub fn init() {
     
     DRIVER.lock();
@@ -91,9 +91,10 @@ lazy_static!{
 }
 
 pub fn print_with_lcd(args: fmt::Arguments){
-    let mut image: ScreenImage = [0; DISP_PIXELS / 2];
+  
     CONSOLE.lock().write_fmt(args).unwrap();
-
+unsafe{
     CONSOLE.lock().render(&mut image);// render 会导致不执行 task
     DRIVER.lock().flush(&image);
+}
 }
