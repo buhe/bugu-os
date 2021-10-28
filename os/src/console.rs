@@ -2,7 +2,7 @@ use core::fmt::{self, Write};
 
 use crate::{driver::print_with_lcd, scall_sbi::put_char};
 
-struct STDOUT;
+pub struct STDOUT;
 
 impl Write for STDOUT {
     fn write_str(&mut self, s: &str) -> core::fmt::Result {

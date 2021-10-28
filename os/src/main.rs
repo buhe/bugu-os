@@ -40,7 +40,6 @@ fn clear_bss() {
 
 #[no_mangle]
 extern "C" fn rust_main(_hartid: usize, device_tree_paddr: usize) -> ! {
-    println!("{}", logo::LOGO);
     // println!("hart id is {}", hartid);
     // println!("dtb addr is 0x{:x}", device_tree_paddr);
     #[repr(C)]
@@ -63,9 +62,11 @@ extern "C" fn rust_main(_hartid: usize, device_tree_paddr: usize) -> ! {
 
     clear_bss();
     heap::init();
+    driver::init();
     mmu::init();
     trap::init();
-    driver::init();
+    
+     println!("{}", logo::LOGO);
     #[cfg(test)]
     test_main();
 

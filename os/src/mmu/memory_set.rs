@@ -3,6 +3,8 @@ use super::{PTEFlags, PageTable, PageTableEntry};
 use super::{PhysAddr, PhysPageNum, VirtAddr, VirtPageNum};
 use super::{StepByOne, VPNRange};
 use crate::config::{MEMORY_END, MMIO, PAGE_SIZE, TRAMPOLINE, TRAP_CONTEXT, USER_STACK_SIZE};
+use core::fmt::{self, Write};
+use crate::console::STDOUT;
 use alloc::collections::BTreeMap;
 use alloc::sync::Arc;
 use alloc::vec::Vec;
@@ -76,14 +78,14 @@ impl MemorySet {
         // map trampoline
         memory_set.map_trampoline();
         // map kernel sections
-        println!(".text [{:#x}, {:#x})", stext as usize, etext as usize);
-        println!(".rodata [{:#x}, {:#x})", srodata as usize, erodata as usize);
-        println!(".data [{:#x}, {:#x})", sdata as usize, edata as usize);
-        println!(
+        writeln!(STDOUT, ".text [{:#x}, {:#x})", stext as usize, etext as usize);
+        writeln!(STDOUT, ".rodata [{:#x}, {:#x})", srodata as usize, erodata as usize);
+       writeln!(STDOUT, ".data [{:#x}, {:#x})", sdata as usize, edata as usize);
+        writeln!(STDOUT, 
             ".bss [{:#x}, {:#x})",
             sbss_with_stack as usize, ebss as usize
         );
-        println!("mapping .text section");
+        writeln!(STDOUT, "mapping .text section");
         memory_set.push(
             MapArea::new(
                 (stext as usize).into(),
@@ -93,7 +95,7 @@ impl MemorySet {
             ),
             None,
         );
-        println!("mapping .rodata section");
+        writeln!(STDOUT, "mapping .rodata section");
         memory_set.push(
             MapArea::new(
                 (srodata as usize).into(),
@@ -103,7 +105,7 @@ impl MemorySet {
             ),
             None,
         );
-        println!("mapping .data section");
+        writeln!(STDOUT, "mapping .data section");
         memory_set.push(
             MapArea::new(
                 (sdata as usize).into(),
@@ -113,7 +115,7 @@ impl MemorySet {
             ),
             None,
         );
-        println!("mapping .bss section");
+        writeln!(STDOUT, "mapping .bss section");
         memory_set.push(
             MapArea::new(
                 (sbss_with_stack as usize).into(),
@@ -123,7 +125,7 @@ impl MemorySet {
             ),
             None,
         );
-        println!("mapping physical memory");
+        writeln!(STDOUT, "mapping physical memory");
         memory_set.push(
             MapArea::new(
                 (ekernel as usize).into(),
