@@ -1,0 +1,79 @@
+{
+	"name": "darwin-riscv",
+	"displayName": "darwin-riscv",
+	"description": "GNU RISC-V toolchain for macOS",
+	"icon": "images/RISCV.png",
+	"version": "1.0.3",
+	"preview": true,
+	"publisher": "metalcode-eu",
+	"engines": {
+		"vscode": "^1.39.0"
+	},
+	"categories": [
+		"Programming Languages",
+		"Debuggers",
+		"Other"
+	],
+	"contributes": {
+		"configuration": {
+			"type": "object",
+			"title": "GNU RISC-V toolchain configuration",
+			"properties": {
+				"riscv.bin": {
+					"type": [
+						"string",
+						"null"
+					],
+					"default": "${env:HOME}/.vscode/extensions/metalcode-eu.darwin-riscv-1.0.3/bin",
+					"description": "Path to RISC-V GNU toolchain binary files."
+				},
+				"riscv.include": {
+					"type": [
+						"string",
+						"null"
+					],
+					"default": "${env:HOME}/.vscode/extensions/metalcode-eu.darwin-riscv-1.0.3/riscv64-unknown-elf/include",
+					"description": "Path to GNU RISC-V toolchain header files."
+				},
+				"riscv.lib": {
+					"type": [
+						"string",
+						"null"
+					],
+					"default": "${env:HOME}/.vscode/extensions/metalcode-eu.darwin-riscv-1.0.3/riscv64-unknown-elf/lib",
+					"description": "Path to GNU RISC-V toolchain library files."
+				},
+				"riscv.gdb": {
+					"type": [
+						"string",
+						"null"
+					],
+					"default": "${env:HOME}/.vscode/extensions/metalcode-eu.darwin-riscv-1.0.3/bin/riscv64-unknown-elf-gdb",
+					"description": "Path to GNU RISC-V debugger."
+				},
+				"kendryte.openocd": {
+					"type": [
+						"string",
+						"null"
+					],
+					"default": "${env:HOME}/.vscode/extensions/metalcode-eu.darwin-riscv-1.0.3/kendryte-openocd/bin/openocd",
+					"description": "Path to Kendryte K210 Open On-Chip-Debugger."
+				}
+			}
+		}
+	},
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/metalcode-eu/darwin-riscv.git"
+	},
+	"license": "GPL-3.0",
+	"scripts": {
+		"postinstall": "./install.sh"
+	},
+	"__metadata": {
+		"id": "bb019d2d-6bc5-4283-ac51-c94ccf613f98",
+		"publisherId": "ecd473a0-e164-4c13-8f67-52d5922300c7",
+		"publisherDisplayName": "metalcode-eu",
+		"installedTimestamp": 1633074945139
+	}
+}
