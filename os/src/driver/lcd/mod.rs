@@ -52,17 +52,17 @@ lazy_static!{
                 Console::new(&cp437_8x8::FONT, None);
 
             /* Make a border */
-            let fg = Color::new(0x80, 0x40, 0x40);
-            let bg = Color::new(0x00, 0x00, 0x00);
-            // Sides
-            for x in 1..console.width() - 1 {
-                console.put(x, 0, fg, bg, '─');
-                console.put(x, console.height() - 1, fg, bg, '─');
-            }
-            for y in 1..console.height() - 1 {
-                console.put(0, y, fg, bg, '│');
-                console.put(console.width() - 1, y, fg, bg, '│');
-            }
+            // let fg = Color::new(0x80, 0x40, 0x40);
+            // let bg = Color::new(0x00, 0x00, 0x00);
+            // // Sides
+            // for x in 1..console.width() - 1 {
+            //     console.put(x, 0, fg, bg, '─');
+            //     console.put(x, console.height() - 1, fg, bg, '─');
+            // }
+            // for y in 1..console.height() - 1 {
+            //     console.put(0, y, fg, bg, '│');
+            //     console.put(console.width() - 1, y, fg, bg, '│');
+            // }
             
             Mutex::new(console)
     };

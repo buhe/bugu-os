@@ -5,9 +5,9 @@ use super::coord::Coord;
 use super::palette_xterm256::PALETTE;
 
 /** Display width in pixels */
-pub const DISP_WIDTH: u16 = 320 / 2;
+pub const DISP_WIDTH: u16 = 320;
 /** Display height in pixels */
-pub const DISP_HEIGHT: u16 = 240 / 2;
+pub const DISP_HEIGHT: u16 = 240;
 /** Number of pixels in display */
 pub const DISP_PIXELS: usize = (DISP_WIDTH as usize) * (DISP_HEIGHT as usize);
 const GRID_WIDTH: u16 = DISP_WIDTH / 8;

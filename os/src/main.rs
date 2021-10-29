@@ -63,6 +63,8 @@ extern "C" fn rust_main(_hartid: usize, device_tree_paddr: usize) -> ! {
     // println!("dt size is {:#?}", size);
 
     clear_bss();
+    // enable 8m DRAM
+    sysctl::pll_enable(sysctl::pll::PLL1);
     sysctl::clock_enable(clock::PLL1);
     heap::init();
     driver::init();

@@ -85,7 +85,7 @@ dependencies = [
 [[package]]
 name = "k210-soc"
 version = "0.1.0"
-source = "git+https://github.com/buguOS/k210-soc#f3b57036df94cad6510cd16216206a63e906a9bc"
+source = "git+https://github.com/buguOS/k210-soc#537c11e081f39f2d7ba789f39b97f5f39912bf5d"
 dependencies = [
  "k210-hal",
  "k210-pac",
