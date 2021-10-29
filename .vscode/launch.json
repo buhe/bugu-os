@@ -5,13 +5,14 @@
             "type": "gdb",
             "request": "launch",
             "name": "debug os",
-            "target": "/Users/buhe/code/gitHub/buguOS/os/target/riscv64gc-unknown-none-elf/debug/os",
+            "target": "target/riscv64gc-unknown-none-elf/debug/os",
             "cwd": "${workspaceRoot}/os",
             "autorun": [
-                "file /Users/buhe/code/gitHub/buguOS/os/target/riscv64gc-unknown-none-elf/debug/os",
-                "target extended-remote :3333",
+                "file target/riscv64gc-unknown-none-elf/debug/os",
+                "target remote :3333",
                 "load",
-                "monitor reset halt"
+                "b rust_main",
+                "j rust_main"
                 // "interrupt"
             ],
             "gdbpath": "/Users/buhe/.vscode/extensions/metalcode-eu.darwin-riscv-1.0.3/bin/riscv64-unknown-elf-gdb",
