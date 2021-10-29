@@ -27,6 +27,8 @@ mod task;
 mod timer;
 mod trap;
 
+use k210_soc::{sysctl::{self, clock}};
+
 global_asm!(include_str!("stack.asm"));
 global_asm!(include_str!("link_app.S"));
 
@@ -42,25 +44,26 @@ fn clear_bss() {
 extern "C" fn rust_main(_hartid: usize, device_tree_paddr: usize) -> ! {
     // println!("hart id is {}", hartid);
     // println!("dtb addr is 0x{:x}", device_tree_paddr);
-    #[repr(C)]
-    struct DtbHeader {
-        be_magic: u32,
-        be_size: u32,
-    }
-    let header = unsafe { &*(device_tree_paddr as *const DtbHeader) };
-    // from_be 是大小端序的转换（from big endian）
-    let magic = u32::from_be(header.be_magic);
+    // #[repr(C)]
+    // struct DtbHeader {
+    //     be_magic: u32,
+    //     be_size: u32,
+    // }
+    // let header = unsafe { &*(device_tree_paddr as *const DtbHeader) };
+    // // from_be 是大小端序的转换（from big endian）
+    // let magic = u32::from_be(header.be_magic);
     // println!("check magic is 0xd00dfeed, magic is  0x{:x}", magic);
-    const DEVICE_TREE_MAGIC: u32 = 0xd00dfeed;
-    assert_eq!(magic, DEVICE_TREE_MAGIC);
-    let size = u32::from_be(header.be_size);
-    let _dtb_data =
-        unsafe { core::slice::from_raw_parts(device_tree_paddr as *const u8, size as usize) };
+    // const DEVICE_TREE_MAGIC: u32 = 0xd00dfeed;
+    // assert_eq!(magic, DEVICE_TREE_MAGIC);
+    // let size = u32::from_be(header.be_size);
+    // let _dtb_data =
+    //     unsafe { core::slice::from_raw_parts(device_tree_paddr as *const u8, size as usize) };
     // let dt = DeviceTree::load(dtb_data).expect("failed to parse device tree");
     // DeviceTree::load is not adpator k210
     // println!("dt size is {:#?}", size);
 
     clear_bss();
+    sysctl::clock_enable(clock::PLL1);
     heap::init();
     driver::init();
     mmu::init();

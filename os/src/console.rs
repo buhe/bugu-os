@@ -14,7 +14,7 @@ impl Write for STDOUT {
 }
 
 pub fn print(args: fmt::Arguments) {
-    // STDOUT.write_fmt(args).unwrap();
+    STDOUT.write_fmt(args).unwrap();
     print_with_lcd(args);
 }
 
