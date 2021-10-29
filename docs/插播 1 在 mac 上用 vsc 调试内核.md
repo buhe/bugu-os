@@ -32,4 +32,11 @@ brew install libusb libusb-compat isl libmpc libftdi
 /Users/buhe/.vscode/extensions/metalcode-eu.darwin-riscv-1.0.3/bin/riscv64-unknown-elf-gdb
 ```
 
-看一下 k210-stuff
+1. gdb os elf
+   1. target remote :3333
+   2. load
+   3. b rust_main
+   4. j rust_main
+   5. n 是单步，但不进入函数
+   6. p 打印变量
+   7. q 退出
