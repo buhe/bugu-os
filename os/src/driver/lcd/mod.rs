@@ -84,6 +84,8 @@ pub fn print_with_lcd(args: fmt::Arguments) {
     CONSOLE.lock().write_fmt(args).unwrap();
     unsafe {
         CONSOLE.lock().render(&mut IMAGE);
-        DRIVER.lock().flush(&IMAGE);
+        if CONSOLE.lock().dirty {
+            DRIVER.lock().flush(&IMAGE);
+        }
     }
 }
