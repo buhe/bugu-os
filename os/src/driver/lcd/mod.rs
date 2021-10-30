@@ -91,7 +91,7 @@ lazy_static! {
     let spi = p.SPI0.constrain();
     let mut lcd = LCD::new(spi, dmac, dma_channel::CHANNEL0);
     lcd.init();
-    lcd.set_direction(st7789v::direction::YX_LRUD);
+    lcd.set_direction(st7789v::direction::YX_RLDU);
     // lcd.clear(lcd_colors::BLUE);
         Mutex::new(lcd)
     };
