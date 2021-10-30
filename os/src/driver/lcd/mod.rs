@@ -1,30 +1,37 @@
 use core::fmt;
 
-use k210_pac::SPI0;
-use lazy_static::*;
-use k210_hal::prelude::*;
 use k210_hal::pac::Peripherals;
-use k210_soc::{dmac::DMACExt, fpioa::{self, io}, sleep::usleep, spi::{SPIExt, SPIImpl}, sysctl::{self, dma_channel}};
+use k210_hal::prelude::*;
+use k210_pac::SPI0;
+use k210_soc::{
+    dmac::DMACExt,
+    fpioa::{self, io},
+    sleep::usleep,
+    spi::{SPIExt, SPIImpl},
+    sysctl::{self, dma_channel},
+};
+use lazy_static::*;
 use spin::Mutex;
 
-use self::{console::{Color, Console, DISP_HEIGHT, DISP_PIXELS, DISP_WIDTH, ScreenImage}, st7789v::{LCD, LCDHL}};
+use self::{
+    console::{Console, ScreenImage, DISP_PIXELS},
+    st7789v::{LCD, LCDHL},
+};
 
 mod st7789v;
 
-mod coord;
-mod palette_xterm256;
-mod lcd_colors;
 mod color;
+mod coord;
 mod cp437;
 mod cp437_8x8;
+mod lcd_colors;
+mod palette_xterm256;
 // 用 LCD 输出
 mod console;
-  static mut image: ScreenImage = [0; DISP_PIXELS / 2];
+static mut IMAGE: ScreenImage = [0; DISP_PIXELS / 2];
 pub fn init() {
-    
     DRIVER.lock();
 }
-
 
 /** Connect pins to internal functions */
 fn io_mux_init() {
@@ -46,9 +53,9 @@ fn io_set_power() {
     sysctl::set_power_mode(sysctl::power_bank::BANK7, sysctl::io_power_mode::V18);
 }
 
-lazy_static!{
+lazy_static! {
     pub static ref CONSOLE: Mutex<Console> = {
-        let mut console: Console =
+        let console: Console =
                 Console::new(&cp437_8x8::FONT, None);
 
             /* Make a border */
@@ -63,7 +70,7 @@ lazy_static!{
             //     console.put(0, y, fg, bg, '│');
             //     console.put(console.width() - 1, y, fg, bg, '│');
             // }
-            
+
             Mutex::new(console)
     };
     pub static ref DRIVER: Mutex<LCD<SPIImpl<SPI0>>> = {
@@ -75,7 +82,7 @@ lazy_static!{
     // let clocks = k210_hal::clock::Clocks::new();
     // sleep a bit to let clients connect
     usleep(200000);
-    
+
     io_mux_init();
     io_set_power();
 
@@ -85,16 +92,15 @@ lazy_static!{
     let mut lcd = LCD::new(spi, dmac, dma_channel::CHANNEL0);
     lcd.init();
     lcd.set_direction(st7789v::direction::YX_LRUD);
-    lcd.clear(lcd_colors::BLUE);
+    // lcd.clear(lcd_colors::BLUE);
         Mutex::new(lcd)
     };
 }
 
-pub fn print_with_lcd(args: fmt::Arguments){
-  
+pub fn print_with_lcd(args: fmt::Arguments) {
     CONSOLE.lock().write_fmt(args).unwrap();
-unsafe{
-    CONSOLE.lock().render(&mut image);// render 会导致不执行 task
-    DRIVER.lock().flush(&image);
-}
+    unsafe {
+        CONSOLE.lock().render(&mut IMAGE);
+        DRIVER.lock().flush(&IMAGE);
+    }
 }

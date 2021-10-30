@@ -1,4 +1,5 @@
 /** Table from cp437 to unicode char; generated with create_tables.py */
+#[allow(dead_code)]
 static FROM: [char; 256] = [
     '\u{0000}', '\u{263a}', '\u{263b}', '\u{2665}', '\u{2666}', '\u{2663}', '\u{2660}', '\u{2022}',
     '\u{25d8}', '\u{25cb}', '\u{25d9}', '\u{2642}', '\u{2640}', '\u{266a}', '\u{266b}', '\u{263c}',
@@ -33,11 +34,11 @@ static FROM: [char; 256] = [
     '\u{2261}', '\u{00b1}', '\u{2265}', '\u{2264}', '\u{2320}', '\u{2321}', '\u{00f7}', '\u{2248}',
     '\u{00b0}', '\u{2219}', '\u{00b7}', '\u{221a}', '\u{207f}', '\u{00b2}', '\u{25a0}', '\u{25a1}',
 ];
-
+#[allow(dead_code)]
 pub fn from(ch: u8) -> char {
     FROM[usize::from(ch)]
 }
-
+#[allow(dead_code)]
 pub fn to(ch: char) -> (u16, u16) {
     (
         match ch {

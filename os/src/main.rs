@@ -27,7 +27,7 @@ mod task;
 mod timer;
 mod trap;
 
-use k210_soc::{sysctl::{self, clock}};
+use k210_soc::sysctl::{self, clock};
 
 global_asm!(include_str!("stack.asm"));
 global_asm!(include_str!("link_app.S"));
@@ -41,7 +41,7 @@ fn clear_bss() {
 }
 
 #[no_mangle]
-extern "C" fn rust_main(_hartid: usize, device_tree_paddr: usize) -> ! {
+extern "C" fn rust_main(_hartid: usize, _: usize) -> ! {
     // println!("hart id is {}", hartid);
     // println!("dtb addr is 0x{:x}", device_tree_paddr);
     // #[repr(C)]
@@ -70,8 +70,8 @@ extern "C" fn rust_main(_hartid: usize, device_tree_paddr: usize) -> ! {
     driver::init();
     mmu::init();
     trap::init();
-    
-     println!("{}", logo::LOGO);
+
+    println!("{}", logo::LOGO);
     #[cfg(test)]
     test_main();
 

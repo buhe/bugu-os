@@ -1,13 +1,13 @@
 //! ST7789V LCD driver
+use k210_soc::dmac::{dma_channel, DMAC};
 use k210_soc::gpio;
 use k210_soc::gpiohs;
 use k210_soc::sleep::usleep;
-use k210_soc::spi::{SPI,work_mode,frame_format,aitm,tmod};
-use k210_soc::dmac::{DMAC,dma_channel};
+use k210_soc::spi::{aitm, frame_format, tmod, work_mode, SPI};
 
+use super::console::ScreenImage;
 use super::console::DISP_HEIGHT;
 use super::console::DISP_WIDTH;
-use super::console::ScreenImage;
 
 // These are the values used in the Kendryte SDK but should not ideally be hardcoded here, but
 // defined in the main.rs and passed to the constructor
@@ -27,6 +27,7 @@ pub const SPI_CLK: u32 = 18_000_000;
 
 #[repr(u8)]
 #[derive(Copy, Clone)]
+#[allow(dead_code, non_camel_case_types)]
 pub enum command {
     NOP = 0x00,
     SWRESET = 0x01,
@@ -115,6 +116,7 @@ pub enum command {
 
 #[repr(u8)]
 #[derive(Copy, Clone)]
+#[allow(dead_code, non_camel_case_types)]
 pub enum direction {
     XY_RLUD = 0x00,
     YX_RLUD = 0x20,
@@ -126,6 +128,7 @@ pub enum direction {
     YX_LRDU = 0xE0,
 }
 pub const DIR_XY_MASK: u8 = 0x20;
+#[allow(dead_code)]
 pub const DIR_MASK: u8 = 0xE0;
 
 pub struct LCD<SPI> {
@@ -179,7 +182,7 @@ impl<X: SPI> LCD<X> {
         }
     }
 
-    pub fn flush(&self, image: &ScreenImage){
+    pub fn flush(&self, image: &ScreenImage) {
         self.draw_picture(0, 0, DISP_WIDTH, DISP_HEIGHT, image);
     }
 
@@ -260,7 +263,8 @@ impl<X: SPI> LCDLL for LCD<X> {
             aitm::AS_FRAME_FORMAT,
             tmod::TRANS,
         );
-        self.spi.send_data_dma(&self.dmac, self.channel, self.spi_cs, &[cmd as u32]);
+        self.spi
+            .send_data_dma(&self.dmac, self.channel, self.spi_cs, &[cmd as u32]);
     }
 
     fn write_byte(&self, data_buf: &[u32]) {
@@ -276,7 +280,8 @@ impl<X: SPI> LCDLL for LCD<X> {
             aitm::AS_FRAME_FORMAT,
             tmod::TRANS,
         );
-        self.spi.send_data_dma(&self.dmac, self.channel, self.spi_cs, data_buf);
+        self.spi
+            .send_data_dma(&self.dmac, self.channel, self.spi_cs, data_buf);
     }
 
     fn write_word(&self, data_buf: &[u32]) {
@@ -292,7 +297,8 @@ impl<X: SPI> LCDLL for LCD<X> {
             aitm::AS_FRAME_FORMAT,
             tmod::TRANS,
         );
-        self.spi.send_data_dma(&self.dmac, self.channel, self.spi_cs, data_buf);
+        self.spi
+            .send_data_dma(&self.dmac, self.channel, self.spi_cs, data_buf);
     }
 
     fn fill_data(&self, data: u32, length: usize) {
@@ -308,7 +314,8 @@ impl<X: SPI> LCDLL for LCD<X> {
             aitm::AS_FRAME_FORMAT,
             tmod::TRANS,
         );
-        self.spi.fill_data_dma(&self.dmac, self.channel, self.spi_cs, data, length);
+        self.spi
+            .fill_data_dma(&self.dmac, self.channel, self.spi_cs, data, length);
     }
 }
 
