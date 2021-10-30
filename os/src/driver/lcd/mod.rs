@@ -50,7 +50,7 @@ fn io_mux_init() {
 fn io_set_power() {
     /* Set dvp and spi pin to 1.8V */
     sysctl::set_power_mode(sysctl::power_bank::BANK6, sysctl::io_power_mode::V18);
-    sysctl::set_power_mode(sysctl::power_bank::BANK7, sysctl::io_power_mode::V18);
+    // sysctl::set_power_mode(sysctl::power_bank::BANK7, sysctl::io_power_mode::V18);
 }
 
 lazy_static! {
