@@ -39,7 +39,7 @@ impl TaskControlBlock {
         let task_cx_ptr =
             (kernel_stack_top - core::mem::size_of::<TaskContext>()) as *mut TaskContext;
         unsafe {
-            *task_cx_ptr = TaskContext::goto_trap_return();
+            *task_cx_ptr = TaskContext::goto_trap_return(); // new 并 ra -> trap_return
         }
         let task_control_block = Self {
             task_cx_ptr: task_cx_ptr as usize,

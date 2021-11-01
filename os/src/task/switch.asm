@@ -14,6 +14,7 @@ __switch:
     # )
     # push TaskContext to current sp and save its address to where a0 points to
     addi sp, sp, -13*8
+    # sd 是寄存器到内存
     sd sp, 0(a0)
     # fill TaskContext with ra & s0-s11
     sd ra, 0(sp)
@@ -23,6 +24,7 @@ __switch:
         .set n, n + 1
     .endr
     # ready for loading TaskContext a1 points to
+    # a1 -> sp
     ld sp, 0(a1)
     # load registers in the TaskContext
     ld ra, 0(sp)
