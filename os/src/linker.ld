@@ -12,6 +12,7 @@ SECTIONS
         *(.text.entry)
         . = ALIGN(4K);
         strampoline = .;
+        /* 跳板的物理地址 */
         *(.text.trampoline);
         . = ALIGN(4K);
         *(.text .text.*)
