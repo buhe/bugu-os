@@ -86,6 +86,7 @@ pub fn print_with_lcd(args: fmt::Arguments) {
         CONSOLE.lock().render(&mut IMAGE);
         if CONSOLE.lock().dirty {
             DRIVER.lock().flush(&IMAGE);
+            CONSOLE.lock().dirty = false;
         }
     }
 }
