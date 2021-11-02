@@ -3,5 +3,13 @@
 version = 3
 
 [[package]]
+name = "bugu-lang"
+version = "0.1.0"
+source = "git+https://github.com/buhe/bugu-lang#16b747bbe5a0a3e9e6fa98652412db0304ee747b"
+
+[[package]]
 name = "user"
 version = "0.1.0"
+dependencies = [
+ "bugu-lang",
+]
