@@ -62,7 +62,7 @@ rust 通过操纵 TaskControlBlock 来间接操纵任务，我们从总体视角
 - run_next_task 具体调用 __switch 切换任务
 - __switch 其实就是一个函数调用
   - 保存被调用寄存器
-  - 切换 stack 来达到切换应用到目的
+  - 切换 sp 和 ra 来达到切换应用到目的
 - 最后调用 trap_return 间接调用 __restore
 
 再一个个的看，处理 trap 和上节相同，重点是如何切换任务，也就是 __switch 
