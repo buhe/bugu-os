@@ -1,6 +1,6 @@
 mod gpio;
-mod lcd;
 mod ir;
+mod lcd;
 pub fn init() {
     gpio::init();
     lcd::init();

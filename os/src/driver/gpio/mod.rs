@@ -1,6 +1,6 @@
 mod driver;
-mod led_gpio;
+mod led_ex;
 pub fn init() {
-    led_gpio::init();
+    led_ex::init();
     println!("inited led");
 }
