@@ -78,3 +78,24 @@ pub fn trap_return() -> ! {
 为什么不直接调用 __restore 呢？
 
 因为 TrapContext 在应用的虚拟内存里，要拿到应用的 token 和 TrapContext 的虚拟地址，__restore 先通过 token 切换地址空间再访问 TrapContext 。
+
+### 抢占式调度
+
+为什么使用抢占式调度？协作就像靠自觉，抢占就像排队，排队整体效率提高了，虽然牺牲了个人利益。
+
+抢占式调度采用时钟中断实现，时钟中断就是常说的时间片
+
+```rust
+pub fn get_time() -> usize {
+    time::read()
+}
+
+pub fn get_time_ms() -> usize {
+    time::read() / (CLOCK_FREQ / MSEC_PER_SEC)
+}
+
+pub fn set_next_trigger() {
+    set_timer(get_time() + CLOCK_FREQ / TICKS_PER_SEC);
+}
+```
+

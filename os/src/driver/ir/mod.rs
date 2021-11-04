@@ -27,7 +27,7 @@ lazy_static! {
         // io_init(&p, &clocks);
         sysctl::clock_enable(sysctl::clock::UART2);
         sysctl::reset(sysctl::reset::UART2);
-        fpioa::set_function(io::I2C1_SDA, fpioa::function::UART2_RX);
+        fpioa::set_function(io::IO32, fpioa::function::UART2_RX);
         let ir = p.UART2.configure(DEFAULT_BAUD.bps(), &clocks);
         let (_, mut rx) = ir.split();
     //     // gpiohs::set_direction(self.pin.try_into().unwrap(), gpio::direction::INPUT);
