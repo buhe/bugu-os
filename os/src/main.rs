@@ -64,8 +64,8 @@ extern "C" fn rust_main(_hartid: usize, _: usize) -> ! {
 
     clear_bss();
     // enable 8m DRAM
-    sysctl::pll_enable(sysctl::pll::PLL1);
-    sysctl::clock_enable(clock::PLL1);
+    // sysctl::pll_enable(sysctl::pll::PLL1);
+    // sysctl::clock_enable(clock::PLL1);
     heap::init();
     driver::init();
     mmu::init();
