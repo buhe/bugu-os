@@ -18,3 +18,5 @@ k210-pac = { git = "https://github.com/buguOS/k210-pac" }
 k210-hal = { git = "https://github.com/buguOS/k210-hal" }
 k210-soc = { git = "https://github.com/buguOS/k210-soc" }
 libm = "0.1"
+infrared = "0.13.0"
+# nom = { git = "https://github.com/Geal/nom", default-features = false, features = [] }
