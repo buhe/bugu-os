@@ -27,7 +27,7 @@ mod task;
 mod timer;
 mod trap;
 
-use k210_soc::sysctl::{self, clock};
+// use k210_soc::sysctl::{self, clock};
 
 global_asm!(include_str!("stack.asm"));
 global_asm!(include_str!("link_app.S"));
