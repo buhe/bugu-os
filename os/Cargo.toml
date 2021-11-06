@@ -2,7 +2,7 @@
 name = "os"
 version = "0.1.0"
 authors = ["buhe <bugu1986@gmail.com>"]
-edition = "2018"
+edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -19,4 +19,4 @@ k210-hal = { git = "https://github.com/buguOS/k210-hal" }
 k210-soc = { git = "https://github.com/buguOS/k210-soc" }
 libm = "0.1"
 infrared = "0.13.0"
-# nom = { git = "https://github.com/Geal/nom", default-features = false, features = [] }
+nom = { version = "5", default-features = false, features = [] }

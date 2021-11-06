@@ -1,6 +1,10 @@
 /** ESP8285 serial WiFi network handler, for connecting to AP and making connections */
 use core::{fmt, str};
 
+use crate::driver::network::util::{write_num_u32, write_qstr};
+
+use super::{response::{CmdResponse, ConnectionType, GenResponse, IPAddress, MACAddress, Response, Status}, traits::Write};
+
 /** Handler state */
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 enum State {

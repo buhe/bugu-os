@@ -1,7 +1,7 @@
 mod gpio;
 mod ir;
 mod lcd;
-// mod network;
+mod network;
 pub fn init() {
     gpio::init();
     lcd::init();

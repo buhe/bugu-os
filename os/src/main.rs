@@ -11,7 +11,8 @@
 
 #[macro_use]
 extern crate bitflags;
-
+#[macro_use]
+extern crate nom;
 extern crate alloc;
 #[macro_use]
 mod console;
@@ -77,7 +78,7 @@ extern "C" fn rust_main(_hartid: usize, _: usize) -> ! {
 
     trap::enable_timer_interrupt();
     timer::set_next_trigger();
-    // task::run_first_task();
+    task::run_first_task();
 
     panic!("Unreachable in rust_main!");
 }
