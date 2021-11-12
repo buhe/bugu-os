@@ -31,6 +31,7 @@ mod console;
 static mut IMAGE: ScreenImage = [0; DISP_PIXELS / 2];
 pub fn init() {
     DRIVER.lock();
+    println!("inited lcd");
 }
 
 /** Connect pins to internal functions */

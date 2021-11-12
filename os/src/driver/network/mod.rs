@@ -1,5 +1,6 @@
 use k210_hal::{prelude::*, serial::{Serial, Tx}};
 use k210_pac::{Peripherals, UART1};
+use k210_soc::{fpioa::{self, io}, gpio, gpiohs, sleep::usleep, sysctl};
 use self::{handler::SerialNetworkHandler, traits::Write};
 
 
@@ -29,11 +30,38 @@ impl Write for WA{
         Ok(())
     }
 }
+
+fn init_io(){
+    sysctl::clock_enable(sysctl::clock::UART1);
+    sysctl::reset(sysctl::reset::UART1);
+    fpioa::set_function(io::WIFI_RX, fpioa::function::UART1_TX);
+    fpioa::set_function(io::WIFI_TX, fpioa::function::UART1_RX);
+    fpioa::set_function(io::WIFI_EN, fpioa::function::GPIOHS8);
+    fpioa::set_io_pull(io::WIFI_EN, fpioa::pull::DOWN);
+    gpiohs::set_direction(8, gpio::direction::OUTPUT);
+    gpiohs::set_pin(8, true);
+}
+
 pub fn init(){
      let p = Peripherals::take().unwrap();
-     let clocks = k210_hal::clock::Clocks::new();
+    sysctl::pll_set_freq(sysctl::pll::PLL0, 800_000_000).unwrap();
+    sysctl::pll_set_freq(sysctl::pll::PLL1, 300_000_000).unwrap();
+    sysctl::pll_set_freq(sysctl::pll::PLL2, 45_158_400).unwrap();
+    let clocks = k210_hal::clock::Clocks::new();
+      usleep(200000);
+     init_io();
+     
      let uart1 = p.UART1.configure(DEFAULT_BAUD.bps(), &clocks);
-     let (tx, rx) = uart1.split();
+     let (tx, mut rx) = uart1.split();
      let mut wa = WA::new(tx);
-     let h = SerialNetworkHandler::new(&mut wa, "" .as_bytes(), "".as_bytes());
+     let mut h = SerialNetworkHandler::new(&mut wa, "" .as_bytes(), "".as_bytes());
+     usleep(1_000_000);
+     h.start(false).unwrap();
+     usleep(60 * 1_000_000);
+     h.list().unwrap();
+     println!("inited netword");
+     loop{
+         let u = rx.try_read().unwrap();
+         println!("{}", u as char);
+     }
 }

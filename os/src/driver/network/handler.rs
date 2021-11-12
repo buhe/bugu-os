@@ -112,6 +112,11 @@ where
         Ok(())
     }
 
+    pub fn list(&mut self) -> Result<(), S::Error> {
+        self.port.write_all(b"AT+CWLAP\r\n")?;
+        Ok(())
+    }
+
     /** Handle an incoming message */
     pub fn message<F>(
         &mut self,
