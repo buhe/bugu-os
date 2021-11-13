@@ -1,6 +1,8 @@
 /** ESP8285 serial WiFi network handler, for connecting to AP and making connections */
 use core::{fmt, str};
 
+use k210_soc::sleep::usleep;
+
 use crate::driver::network::util::{write_num_u32, write_qstr};
 
 use super::{response::{CmdResponse, ConnectionType, GenResponse, IPAddress, MACAddress, Response, Status}, traits::Write};
@@ -113,7 +115,10 @@ where
     }
 
     pub fn list(&mut self) -> Result<(), S::Error> {
+        self.port.write_all(b"AT+CWMODE=1\r\n")?;
+        usleep(10 * 1_000_000);
         self.port.write_all(b"AT+CWLAP\r\n")?;
+         usleep(10 * 1_000_000);
         Ok(())
     }
 

@@ -57,7 +57,7 @@ pub fn init(){
      let mut h = SerialNetworkHandler::new(&mut wa, "" .as_bytes(), "".as_bytes());
      usleep(1_000_000);
      h.start(false).unwrap();
-     usleep(60 * 1_000_000);
+     usleep(2 * 1_000_000);
      h.list().unwrap();
      println!("inited netword");
      loop{
