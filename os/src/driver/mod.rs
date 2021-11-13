@@ -6,6 +6,6 @@ pub fn init() {
     gpio::init();
     lcd::init();
     // ir::init();
-    network::init();
+    // network::init();
 }
 pub use lcd::print_with_lcd;

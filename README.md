@@ -15,6 +15,10 @@ Another rust OS
 - language
   - rust
 
+### Screenshot
+
+![IMG_1431](https://tva1.sinaimg.cn/large/008i3skNgy1gwdcsz7zktj31400u07cj.jpg)
+
 ### Documents
 
 - https://github.com/buhe/bugu/tree/main/docs
