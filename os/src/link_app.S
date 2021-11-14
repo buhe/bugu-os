@@ -11,6 +11,14 @@ _num_app:
     .quad app_4_start
     .quad app_4_end
 
+    .global _app_names
+_app_names:
+    .string "hello"
+    .string "power_3"
+    .string "power_5"
+    .string "power_7"
+    .string "sleep"
+
     .section .data
     .global app_0_start
     .global app_0_end

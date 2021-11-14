@@ -2,7 +2,6 @@ use core::slice;
 
 use super::traits::Write;
 
-
 /** Write quoted string. `\` and `"` are escaped, and the string
  * is automatically surrounded with double-quotes.
  */

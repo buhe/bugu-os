@@ -5,7 +5,10 @@ use k210_soc::sleep::usleep;
 
 use crate::driver::network::util::{write_num_u32, write_qstr};
 
-use super::{response::{CmdResponse, ConnectionType, GenResponse, IPAddress, MACAddress, Response, Status}, traits::Write};
+use super::{
+    response::{CmdResponse, ConnectionType, GenResponse, IPAddress, MACAddress, Response, Status},
+    traits::Write,
+};
 
 /** Handler state */
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
@@ -118,7 +121,7 @@ where
         self.port.write_all(b"AT+CWMODE=1\r\n")?;
         usleep(10 * 1_000_000);
         self.port.write_all(b"AT+CWLAP\r\n")?;
-         usleep(10 * 1_000_000);
+        usleep(10 * 1_000_000);
         Ok(())
     }
 
@@ -158,7 +161,7 @@ where
                     self.state = State::Error;
                 }
                 _ => {}
-            }
+            },
             State::SetStationMode => match resp {
                 Response::Gen(GenResponse::OK) => {
                     writeln!(debug, "Station mode set - connecting to AP").unwrap();
@@ -175,7 +178,7 @@ where
                     on_event(self, NetworkEvent::Error, debug);
                 }
                 _ => {}
-            }
+            },
             State::ConnectingToAP => match resp {
                 Response::Gen(GenResponse::FAIL) | Response::Gen(GenResponse::ERROR) => {
                     writeln!(debug, "Fatal: failed to connect to AP").unwrap();
@@ -206,7 +209,7 @@ where
                     on_event(self, NetworkEvent::Error, debug);
                 }
                 _ => {}
-            }
+            },
             State::SetMux => match resp {
                 Response::Gen(GenResponse::OK) => {
                     writeln!(debug, "Succesfully set multi-connection mode").unwrap();
@@ -248,18 +251,22 @@ where
                     on_event(self, NetworkEvent::SendComplete(link), debug);
                 }
                 _ => {}
-            }
+            },
             State::RequestListen(port) => match resp {
                 Response::Gen(GenResponse::OK) => {
                     self.state = State::Idle;
-                    on_event(self, NetworkEvent::ListenSuccess(self.ip.unwrap(), port), debug);
+                    on_event(
+                        self,
+                        NetworkEvent::ListenSuccess(self.ip.unwrap(), port),
+                        debug,
+                    );
                 }
                 Response::Gen(GenResponse::FAIL) | Response::Gen(GenResponse::ERROR) => {
                     self.state = State::Idle;
                     on_event(self, NetworkEvent::ListenFailed(port), debug);
                 }
                 _ => {}
-            }
+            },
             _ => {}
         }
         match resp {

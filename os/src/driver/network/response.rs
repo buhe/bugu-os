@@ -1,7 +1,7 @@
 /** Parser for ESP8266 AT responses */
 use core::str;
-use nom::Offset;
 use nom::character::streaming::{digit1 as digit, hex_digit1 as hex_digit};
+use nom::Offset;
 
 /** Connection type for CIPSTATUS etc */
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
