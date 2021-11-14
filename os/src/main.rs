@@ -1,6 +1,7 @@
 #![feature(asm)]
 #![feature(global_asm)]
 #![feature(alloc_error_handler)]
+#![feature(panic_info_message)]
 #![feature(custom_test_frameworks)]
 #![test_runner(crate::test_runner)]
 #![no_std]
@@ -70,6 +71,9 @@ extern "C" fn rust_main(_hartid: usize, _: usize) -> ! {
     heap::init();
     driver::init();
     mmu::init();
+    
+    task::add_initproc();
+    println!("after initproc!");
     trap::init();
 
     println!("{}", logo::LOGO);
