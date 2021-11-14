@@ -6,7 +6,7 @@ extern crate user;
 
 use user::{fork, wait, exit};
 
-const MAX_CHILD: usize = 40;
+const MAX_CHILD: usize = 10;
 
 #[no_mangle]
 pub fn main() -> i32 {
