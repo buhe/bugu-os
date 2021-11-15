@@ -84,7 +84,12 @@ lazy_static! {
 pub fn print_with_lcd(args: fmt::Arguments) {
     CONSOLE.lock().write_fmt(args).unwrap();
     unsafe {
-        CONSOLE.lock().render(&mut IMAGE);
+        CONSOLE.lock().render(&mut IMAGE);  
+    }
+}
+
+pub fn flush() {
+     unsafe {
         if CONSOLE.lock().dirty {
             DRIVER.lock().flush(&IMAGE);
             CONSOLE.lock().dirty = false;

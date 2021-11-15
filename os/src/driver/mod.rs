@@ -9,3 +9,4 @@ pub fn init() {
     // network::init();
 }
 pub use lcd::print_with_lcd;
+pub use lcd::flush;
