@@ -3,6 +3,9 @@ TARGET := riscv64gc-unknown-none-elf
 MODE := debug
 KERNEL_ELF := target/$(TARGET)/$(MODE)/os
 KERNEL_BIN := $(KERNEL_ELF).bin
+FS_IMG := ../user/target/$(TARGET)/$(MODE)/fs.img
+SDCARD := /dev/disk2
+APPS := ../user/src/bin/*
 
 # BOARD
 BOARD ?= k210
