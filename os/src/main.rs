@@ -28,6 +28,7 @@ mod scall_sbi;
 mod task;
 mod timer;
 mod trap;
+mod fs;
 
 // use k210_soc::sysctl::{self, clock};
 

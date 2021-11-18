@@ -277,7 +277,6 @@ impl MemorySet {
             .find(|(_, area)| area.vpn_range.get_start() == start_vpn)
         {
             area.unmap(&mut self.page_table);
-            println!("m area len is {}", self.areas.len());
             self.areas.remove(idx);
         }
     }

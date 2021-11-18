@@ -3,7 +3,7 @@
     .section .data
     .global _num_app
 _num_app:
-    .quad 8
+    .quad 10
     .quad app_0_start
     .quad app_1_start
     .quad app_2_start
@@ -12,13 +12,17 @@ _num_app:
     .quad app_5_start
     .quad app_6_start
     .quad app_7_start
-    .quad app_7_end
+    .quad app_8_start
+    .quad app_9_start
+    .quad app_9_end
 
     .global _app_names
 _app_names:
     .string "forktest"
     .string "hello"
     .string "initproc"
+    .string "pipe_large_test"
+    .string "pipetest"
     .string "power_3"
     .string "power_5"
     .string "power_7"
@@ -54,7 +58,7 @@ app_2_end:
     .global app_3_end
     .align 3
 app_3_start:
-    .incbin "../user/target/riscv64gc-unknown-none-elf/release/power_3"
+    .incbin "../user/target/riscv64gc-unknown-none-elf/release/pipe_large_test"
 app_3_end:
 
     .section .data
@@ -62,7 +66,7 @@ app_3_end:
     .global app_4_end
     .align 3
 app_4_start:
-    .incbin "../user/target/riscv64gc-unknown-none-elf/release/power_5"
+    .incbin "../user/target/riscv64gc-unknown-none-elf/release/pipetest"
 app_4_end:
 
     .section .data
@@ -70,7 +74,7 @@ app_4_end:
     .global app_5_end
     .align 3
 app_5_start:
-    .incbin "../user/target/riscv64gc-unknown-none-elf/release/power_7"
+    .incbin "../user/target/riscv64gc-unknown-none-elf/release/power_3"
 app_5_end:
 
     .section .data
@@ -78,7 +82,7 @@ app_5_end:
     .global app_6_end
     .align 3
 app_6_start:
-    .incbin "../user/target/riscv64gc-unknown-none-elf/release/sleep"
+    .incbin "../user/target/riscv64gc-unknown-none-elf/release/power_5"
 app_6_end:
 
     .section .data
@@ -86,5 +90,21 @@ app_6_end:
     .global app_7_end
     .align 3
 app_7_start:
-    .incbin "../user/target/riscv64gc-unknown-none-elf/release/user_shell"
+    .incbin "../user/target/riscv64gc-unknown-none-elf/release/power_7"
 app_7_end:
+
+    .section .data
+    .global app_8_start
+    .global app_8_end
+    .align 3
+app_8_start:
+    .incbin "../user/target/riscv64gc-unknown-none-elf/release/sleep"
+app_8_end:
+
+    .section .data
+    .global app_9_start
+    .global app_9_end
+    .align 3
+app_9_start:
+    .incbin "../user/target/riscv64gc-unknown-none-elf/release/user_shell"
+app_9_end:

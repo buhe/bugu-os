@@ -52,5 +52,5 @@ pub trait LCDHL {
 }
 ```
 
-LCD 是结构体，定义了 gpiohs  
+LCD 用的是 SPI 总线，
 
