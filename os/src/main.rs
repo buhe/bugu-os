@@ -21,7 +21,6 @@ mod config;
 mod driver;
 mod heap;
 mod lang;
-mod loader;
 mod logo;
 mod mmu;
 mod scall_sbi;
@@ -33,7 +32,6 @@ mod fs;
 // use k210_soc::sysctl::{self, clock};
 
 global_asm!(include_str!("stack.asm"));
-global_asm!(include_str!("link_app.S"));
 
 fn clear_bss() {
     extern "C" {
@@ -83,7 +81,7 @@ extern "C" fn rust_main(_hartid: usize, _: usize) -> ! {
 
     trap::enable_timer_interrupt();
     timer::set_next_trigger();
-    loader::list_apps();
+    fs::list_apps();
     task::run_tasks();
 
     panic!("Unreachable in rust_main!");

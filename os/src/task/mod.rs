@@ -5,7 +5,6 @@ mod processor;
 mod switch;
 mod task;
 
-use crate::loader::get_app_data_by_name;
 use alloc::sync::Arc;
 use lazy_static::*;
 use manager::fetch_task;
@@ -18,6 +17,8 @@ pub use pid::{pid_alloc, KernelStack, PidHandle};
 pub use processor::{
     current_task, current_trap_cx, current_user_token, run_tasks, schedule, take_current_task,
 };
+
+use crate::fs::{open_file, OpenFlags};
 
 pub fn suspend_current_and_run_next() {
     // There must be an application running.
@@ -71,10 +72,13 @@ pub fn exit_current_and_run_next(exit_code: i32) {
 }
 
 lazy_static! {
-    pub static ref INITPROC: Arc<TaskControlBlock> = Arc::new(TaskControlBlock::new(
-        get_app_data_by_name("initproc").unwrap()
-    ));
+    pub static ref INITPROC: Arc<TaskControlBlock> = Arc::new({
+        let inode = open_file("initproc", OpenFlags::RDONLY).unwrap();
+        let v = inode.read_all();
+        TaskControlBlock::new(v.as_slice())
+    });
 }
+
 
 pub fn add_initproc() {
     add_task(INITPROC.clone());

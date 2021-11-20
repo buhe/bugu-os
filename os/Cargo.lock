@@ -72,6 +72,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "fs-demo"
+version = "0.1.0"
+dependencies = [
+ "lazy_static",
+ "spin 0.7.1",
+]
+
+[[package]]
 name = "infrared"
 version = "0.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -173,6 +181,7 @@ dependencies = [
  "bitflags",
  "buddy_system_allocator",
  "device_tree",
+ "fs-demo",
  "infrared",
  "k210-hal",
  "k210-pac",

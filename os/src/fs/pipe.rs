@@ -113,6 +113,8 @@ pub fn make_pipe() -> (Arc<Pipe>, Arc<Pipe>) {
 }
 
 impl File for Pipe {
+    fn readable(&self) -> bool { self.readable }
+    fn writable(&self) -> bool { self.writable }
     fn read(&self, buf: UserBuffer) -> usize {
         assert_eq!(self.readable, true);
         let mut buf_iter = buf.into_iter();

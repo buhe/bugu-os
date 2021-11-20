@@ -20,3 +20,4 @@ k210-soc = { git = "https://github.com/buguOS/k210-soc" }
 libm = "0.1"
 infrared = "0.13.0"
 nom = { version = "5", default-features = false, features = [] }
+fs-demo = { path = "../fs-demo" }

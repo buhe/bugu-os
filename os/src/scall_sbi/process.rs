@@ -1,11 +1,16 @@
-use crate::loader::get_app_data_by_name;
-use crate::mmu::{translated_refmut, translated_str};
+use crate::mmu::{translated_refmut, translated_str,translated_ref};
 use crate::task::{
     add_task, current_task, current_user_token, exit_current_and_run_next,
     suspend_current_and_run_next,
 };
 use crate::timer::get_time_ms;
+use alloc::string::String;
 use alloc::sync::Arc;
+use alloc::vec::Vec;
+use crate::fs::{
+    open_file,
+    OpenFlags,
+};
 
 pub fn sys_exit(exit_code: i32) -> ! {
     // println!("[kernel] Application exited with code {}", exit_code);
@@ -40,13 +45,25 @@ pub fn sys_fork() -> isize {
     new_pid as isize
 }
 
-pub fn sys_exec(path: *const u8) -> isize {
-    let token = current_user_token();
+pub fn sys_exec(path: *const u8, mut args: *const usize) -> isize {
+   let token = current_user_token();
     let path = translated_str(token, path);
-    if let Some(data) = get_app_data_by_name(path.as_str()) {
+    let mut args_vec: Vec<String> = Vec::new();
+    loop {
+        let arg_str_ptr = *translated_ref(token, args);
+        if arg_str_ptr == 0 {
+            break;
+        }
+        args_vec.push(translated_str(token, arg_str_ptr as *const u8));
+        unsafe { args = args.add(1); }
+    }
+    if let Some(app_inode) = open_file(path.as_str(), OpenFlags::RDONLY) {
+        let all_data = app_inode.read_all();
         let task = current_task().unwrap();
-        task.exec(data);
-        0
+        let argc = args_vec.len();
+        task.exec(all_data.as_slice(), args_vec);
+        // return argc because cx.x[10] will be covered with it later
+        argc as isize
     } else {
         -1
     }
@@ -88,4 +105,35 @@ pub fn sys_waitpid(pid: isize, exit_code_ptr: *mut i32) -> isize {
         -2
     }
     // ---- release current PCB lock automatically
+}
+
+pub fn sys_open(path: *const u8, flags: u32) -> isize {
+    let task = current_task().unwrap();
+    let token = current_user_token();
+    let path = translated_str(token, path);
+    if let Some(inode) = open_file(
+        path.as_str(),
+        OpenFlags::from_bits(flags).unwrap()
+    ) {
+        let mut inner = task.acquire_inner_lock();
+        let fd = inner.alloc_fd();
+        inner.fd_table[fd] = Some(inode);
+        fd as isize
+    } else {
+        -1
+    }
+}
+
+pub fn sys_dup(fd: usize) -> isize {
+    let task = current_task().unwrap();
+    let mut inner = task.acquire_inner_lock();
+    if fd >= inner.fd_table.len() {
+        return -1;
+    }
+    if inner.fd_table[fd].is_none() {
+        return -1;
+    }
+    let new_fd = inner.alloc_fd();
+    inner.fd_table[new_fd] = Some(Arc::clone(inner.fd_table[fd].as_ref().unwrap()));
+    new_fd as isize
 }

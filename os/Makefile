@@ -3,7 +3,7 @@ TARGET := riscv64gc-unknown-none-elf
 MODE := debug
 KERNEL_ELF := target/$(TARGET)/$(MODE)/os
 KERNEL_BIN := $(KERNEL_ELF).bin
-FS_IMG := ../user/target/$(TARGET)/$(MODE)/fs.img
+FS_IMG := ../user/target/$(TARGET)/release/fs.img
 SDCARD := /dev/disk2
 APPS := ../user/src/bin/*
 
@@ -28,6 +28,15 @@ env:
 	cargo install cargo-binutils 
 	rustup component add rust-src
 	rustup component add llvm-tools-preview
+
+sdcard: $(FS_IMG)
+	@echo "Are you sure write to $(SDCARD) ? [y/N] " && read ans && [ $${ans:-N} = y ]
+	@sudo dd if=/dev/zero of=$(SDCARD) bs=1048576 count=16
+	@sudo dd if=$(FS_IMG) of=$(SDCARD)
+
+$(FS_IMG): $(APPS)
+	@cd ../user && make build
+	@cd ../fs-fuse && cargo run --release -- -s ../user/src/bin/ -t ../user/target/riscv64gc-unknown-none-elf/release/
 
 $(KERNEL_BIN): kernel
 	@$(OBJCOPY) $(KERNEL_ELF) --strip-all -O binary $@
