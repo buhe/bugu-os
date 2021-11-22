@@ -71,11 +71,11 @@ extern "C" fn rust_main(_hartid: usize, _: usize) -> ! {
     mmu::init();
     driver::init();
     trap::init();
-    // println!("{}", logo::LOGO);
     #[cfg(test)]
     test_main();
     trap::enable_timer_interrupt();
     timer::set_next_trigger();
+    println!("{}", logo::LOGO);
     fs::list_apps();
     task::add_initproc();
     task::run_tasks();
