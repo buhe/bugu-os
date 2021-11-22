@@ -61,7 +61,6 @@ impl TaskControlBlock {
     pub fn acquire_inner_lock(&self) -> MutexGuard<TaskControlBlockInner> {
         self.inner.lock()
     }
-    #[allow(unused)]
     pub fn swap() {
         // = fork + exec
     }
