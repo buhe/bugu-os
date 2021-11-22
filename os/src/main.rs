@@ -12,7 +12,7 @@
 
 #[macro_use]
 extern crate bitflags;
-#[macro_use]
+// #[macro_use]
 extern crate nom;
 extern crate alloc;
 #[macro_use]
@@ -70,22 +70,17 @@ extern "C" fn rust_main(_hartid: usize, _: usize) -> ! {
     // sysctl::pll_enable(sysctl::pll::PLL1);
     // sysctl::clock_enable(clock::PLL1);
     heap::init();
-    driver::init();
     mmu::init();
-    
+    driver::init();
     task::add_initproc();
-    println!("after initproc!");
     trap::init();
-
     println!("{}", logo::LOGO);
     #[cfg(test)]
     test_main();
-
     trap::enable_timer_interrupt();
     timer::set_next_trigger();
     loader::list_apps();
     task::run_tasks();
-
     panic!("Unreachable in rust_main!");
 }
 
