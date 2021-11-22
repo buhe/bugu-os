@@ -1,5 +1,5 @@
 use crate::config::CLOCK_FREQ;
-// use crate::driver::flush;
+use crate::driver::flush;
 use crate::scall_sbi::set_timer;
 use riscv::register::time;
 
@@ -16,9 +16,9 @@ pub fn get_time_ms() -> usize {
 
 pub fn set_next_trigger() {
     set_timer(get_time() + CLOCK_FREQ / TICKS_PER_SEC);
-    // flush_at_10ms();
+    flush_at_10ms();
 }
 
-// pub fn flush_at_10ms() {
-//     flush();
-// }
+pub fn flush_at_10ms() {
+    flush();
+}

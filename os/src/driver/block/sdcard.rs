@@ -2,7 +2,7 @@
 #![allow(non_camel_case_types)]
 #![allow(unused)]
 
-use k210_pac::{Peripherals, SPI0};
+use k210_pac::{Peripherals, SPI1};
 use k210_hal::prelude::*;
 use k210_soc::{
     //dmac::{dma_channel, DMAC, DMACExt},
@@ -234,9 +234,7 @@ impl</*'a,*/ X: SPI> SDCard</*'a,*/ X> {
             aitm::STANDARD,
             tmod::RECV,
         );
-        println!("read 3.1.1");
         self.spi.recv_data(self.spi_cs, data);
-        println!("read 3.1.2");
     }
 
     /*
@@ -592,7 +590,6 @@ impl</*'a,*/ X: SPI> SDCard</*'a,*/ X> {
      *         - `Ok(())`: Sequence succeed
      */
     pub fn read_sector(&self, data_buf: &mut [u8], sector: u32) -> Result<(), ()> {
-        println!("read 1");
         assert!(data_buf.len() >= SEC_LEN && (data_buf.len() % SEC_LEN) == 0);
         /* Send CMD17 to read one block, or CMD18 for multiple */
         let flag = if data_buf.len() == SEC_LEN {
@@ -602,13 +599,11 @@ impl</*'a,*/ X: SPI> SDCard</*'a,*/ X> {
             self.send_cmd(CMD::CMD18, sector, 0);
             true
         };
-        println!("read 2");
         /* Check if the SD acknowledged the read block command: R1 response (0x00: no errors) */
         if self.get_response() != 0x00 {
             self.end_cmd();
             return Err(());
         }
-        println!("read 3");
         let mut error = false;
         //let mut dma_chunk = [0u32; SEC_LEN];
         let mut tmp_chunk= [0u8; SEC_LEN];
@@ -619,21 +614,16 @@ impl</*'a,*/ X: SPI> SDCard</*'a,*/ X> {
             }
             /* Read the SD block data : read NumByteToRead data */
             //self.read_data_dma(&mut dma_chunk);
-            println!("read 3.1");
             self.read_data(&mut tmp_chunk);
-            println!("read 3.2");
             /* Place the data received as u32 units from DMA into the u8 target buffer */
             for (a, b) in chunk.iter_mut().zip(/*dma_chunk*/tmp_chunk.iter()) {
                 //*a = (b & 0xff) as u8;
                 *a = *b;
             }
-            println!("read 3.3");
             /* Get CRC bytes (not really needed by us, but required by SD) */
             let mut frame = [0u8; 2];
-            println!("read 3.4");
             self.read_data(&mut frame);
         }
-        println!("read 4");
         self.end_cmd();
         if flag {
             self.send_cmd(CMD::CMD12, 0, 0);
@@ -713,9 +703,9 @@ const SD_CS: u32 = 3;
 
 /** Connect pins to internal functions */
 fn io_init() {
-    fpioa::set_function(io::SPI0_SCLK, fpioa::function::SPI0_SCLK);
-    fpioa::set_function(io::SPI0_MOSI, fpioa::function::SPI0_D0);
-    fpioa::set_function(io::SPI0_MISO, fpioa::function::SPI0_D1);
+    fpioa::set_function(io::SPI0_SCLK, fpioa::function::SPI1_SCLK);
+    fpioa::set_function(io::SPI0_MOSI, fpioa::function::SPI1_D0);
+    fpioa::set_function(io::SPI0_MISO, fpioa::function::SPI1_D1);
     fpioa::set_function(io::SPI0_CS0, fpioa::function::gpiohs(SD_CS_GPIONUM));
     fpioa::set_io_pull(io::SPI0_CS0, fpioa::pull::DOWN); // GPIO output=pull down
 }
@@ -724,7 +714,7 @@ lazy_static! {
     static ref PERIPHERALS: Mutex<Peripherals> = Mutex::new(Peripherals::take().unwrap());
 }
 
-fn init_sdcard() -> SDCard<SPIImpl<SPI0>> {
+fn init_sdcard() -> SDCard<SPIImpl<SPI1>> {
     // wait previous output
     usleep(100000);
     let peripherals = unsafe { Peripherals::steal() };
@@ -735,7 +725,7 @@ fn init_sdcard() -> SDCard<SPIImpl<SPI0>> {
     peripherals.UARTHS.configure(115_200.bps(), &clocks);
     io_init();
 
-    let spi = peripherals.SPI0.constrain();
+    let spi = peripherals.SPI1.constrain();
     let sd = SDCard::new(spi, SD_CS, SD_CS_GPIONUM);
     let info = sd.init().unwrap();
     let num_sectors = info.CardCapacity / 512;
@@ -745,7 +735,7 @@ fn init_sdcard() -> SDCard<SPIImpl<SPI0>> {
     sd
 }
 
-pub struct SDCardWrapper(Mutex<SDCard<SPIImpl<SPI0>>>);
+pub struct SDCardWrapper(Mutex<SDCard<SPIImpl<SPI1>>>);
 
 impl SDCardWrapper {
     pub fn new() -> Self {
