@@ -68,20 +68,16 @@ extern "C" fn rust_main(_hartid: usize, _: usize) -> ! {
     // sysctl::pll_enable(sysctl::pll::PLL1);
     // sysctl::clock_enable(clock::PLL1);
     heap::init();
-    driver::init();
     mmu::init();
-    
-    task::add_initproc();
-    println!("after initproc!");
+    driver::init();
     trap::init();
-
-    println!("{}", logo::LOGO);
+    // println!("{}", logo::LOGO);
     #[cfg(test)]
     test_main();
-
     trap::enable_timer_interrupt();
     timer::set_next_trigger();
     fs::list_apps();
+    task::add_initproc();
     task::run_tasks();
 
     panic!("Unreachable in rust_main!");
