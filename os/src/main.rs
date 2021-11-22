@@ -33,7 +33,7 @@ mod scall_sbi;
 // use k210_soc::sysctl::{self, clock};
 
 global_asm!(include_str!("stack.asm"));
-global_asm!(include_str!("link_app.S"));
+// global_asm!(include_str!("link_app.S"));
 
 fn clear_bss() {
     extern "C" {
@@ -44,7 +44,7 @@ fn clear_bss() {
 }
 
 #[no_mangle]
-extern "C" fn rust_main(_hartid: usize, _: usize) -> ! {
+pub fn rust_main() -> ! {
     // println!("hart id is {}", hartid);
     // println!("dtb addr is 0x{:x}", device_tree_paddr);
     // #[repr(C)]
@@ -84,11 +84,11 @@ extern "C" fn rust_main(_hartid: usize, _: usize) -> ! {
     panic!("Unreachable in rust_main!");
 }
 
-#[cfg(test)]
-fn test_runner(tests: &[&dyn Fn()]) {
-    println!("Running {} tests", tests.len());
-    for test in tests {
-        test();
-        println!("[ok]");
-    }
-}
+// #[cfg(test)]
+// fn test_runner(tests: &[&dyn Fn()]) {
+//     println!("Running {} tests", tests.len());
+//     for test in tests {
+//         test();
+//         println!("[ok]");
+//     }
+// }
