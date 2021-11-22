@@ -2,18 +2,18 @@
 #![feature(global_asm)]
 #![feature(alloc_error_handler)]
 #![feature(panic_info_message)]
-#![feature(custom_test_frameworks)]
-#![test_runner(crate::test_runner)]
+// #![feature(custom_test_frameworks)]
+// #![test_runner(crate::test_runner)]
 #![no_std]
 #![no_main]
-#![reexport_test_harness_main = "test_main"]
+// #![reexport_test_harness_main = "test_main"]
 
 // use device_tree::DeviceTree;
 
 #[macro_use]
 extern crate bitflags;
 // #[macro_use]
-extern crate nom;
+// extern crate nom;
 extern crate alloc;
 #[macro_use]
 mod console;
@@ -21,14 +21,14 @@ mod config;
 mod driver;
 mod heap;
 mod lang;
-mod loader;
-mod logo;
-mod mmu;
+// mod loader;
+// mod logo;
+// mod mmu;
 mod scall_sbi;
-mod task;
-mod timer;
-mod trap;
-mod fs;
+// mod task;
+// mod timer;
+// mod trap;
+// mod fs;
 
 // use k210_soc::sysctl::{self, clock};
 
@@ -70,17 +70,17 @@ extern "C" fn rust_main(_hartid: usize, _: usize) -> ! {
     // sysctl::pll_enable(sysctl::pll::PLL1);
     // sysctl::clock_enable(clock::PLL1);
     heap::init();
-    mmu::init();
+    // mmu::init();
+    // trap::init();
+    // println!("{}", logo::LOGO);
+    // #[cfg(test)]
+    // test_main();
+    // trap::enable_timer_interrupt();
+    // timer::set_next_trigger();
+    // loader::list_apps();
     driver::init();
-    task::add_initproc();
-    trap::init();
-    println!("{}", logo::LOGO);
-    #[cfg(test)]
-    test_main();
-    trap::enable_timer_interrupt();
-    timer::set_next_trigger();
-    loader::list_apps();
-    task::run_tasks();
+    // task::add_initproc();
+    // task::run_tasks();
     panic!("Unreachable in rust_main!");
 }
 

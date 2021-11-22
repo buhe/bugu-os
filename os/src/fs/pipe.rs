@@ -4,7 +4,7 @@ use spin::Mutex;
 use crate::mmu::{
     UserBuffer,
 };
-use crate::task::suspend_current_and_run_next;
+// use crate::task::suspend_current_and_run_next;
 
 pub struct Pipe {
     readable: bool,
@@ -125,7 +125,7 @@ impl File for Pipe {
                     return read_size;
                 }
                 drop(ring_buffer);
-                suspend_current_and_run_next();
+                // suspend_current_and_run_next();
                 continue;
             }
             // read at most loop_read bytes
@@ -148,7 +148,7 @@ impl File for Pipe {
             let loop_write = ring_buffer.available_write();
             if loop_write == 0 {
                 drop(ring_buffer);
-                suspend_current_and_run_next();
+                // suspend_current_and_run_next();
                 continue;
             }
             // write at most loop_write bytes

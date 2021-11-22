@@ -14,9 +14,9 @@ spin = "0.7.0"
 bitflags = "1.2.1"
 xmas-elf = "0.7.0"
 device_tree = { git = "https://github.com/rcore-os/device_tree-rs", rev = "2fa8411" }
-k210-pac = { git = "https://github.com/buguOS/k210-pac" }
-k210-hal = { git = "https://github.com/buguOS/k210-hal" }
-k210-soc = { git = "https://github.com/buguOS/k210-soc" }
+k210-pac = { git = "https://github.com/wyfcyx/k210-pac" }
+k210-hal = { git = "https://github.com/wyfcyx/k210-hal" }
+k210-soc = { git = "https://github.com/wyfcyx/k210-soc" }
 libm = "0.1"
 infrared = "0.13.0"
 nom = { version = "5", default-features = false, features = [] }

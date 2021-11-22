@@ -1,7 +1,7 @@
 use super::File;
 use crate::mmu::{UserBuffer};
 use crate::scall_sbi::console_getchar;
-use crate::task::suspend_current_and_run_next;
+// use crate::task::suspend_current_and_run_next;
 
 pub struct Stdin;
 
@@ -15,7 +15,7 @@ impl File for Stdin {
         loop {
             c = console_getchar();
             if c == 0 {
-                suspend_current_and_run_next();
+                // suspend_current_and_run_next();
                 continue;
             } else {
                 break;

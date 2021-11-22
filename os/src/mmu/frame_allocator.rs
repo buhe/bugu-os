@@ -1,9 +1,9 @@
 use super::{PhysAddr, PhysPageNum};
 use alloc::vec::Vec;
 use spin::Mutex;
-pub const MEMORY_END: usize = 0x80800000;
-use core::fmt::{self, Debug, Formatter};
+use crate::config::MEMORY_END;
 use lazy_static::*;
+use core::fmt::{self, Debug, Formatter};
 
 pub struct FrameTracker {
     pub ppn: PhysPageNum,
@@ -73,7 +73,10 @@ impl FrameAllocator for StackFrameAllocator {
     fn dealloc(&mut self, ppn: PhysPageNum) {
         let ppn = ppn.0;
         // validity check
-        if ppn >= self.current || self.recycled.iter().find(|&v| *v == ppn).is_some() {
+        if ppn >= self.current || self.recycled
+            .iter()
+            .find(|&v| {*v == ppn})
+            .is_some() {
             panic!("Frame ppn={:#x} has not been allocated!", ppn);
         }
         // recycle
@@ -92,10 +95,9 @@ pub fn init_frame_allocator() {
     extern "C" {
         fn ekernel();
     }
-    FRAME_ALLOCATOR.lock().init(
-        PhysAddr::from(ekernel as usize).ceil(),
-        PhysAddr::from(MEMORY_END).floor(),
-    );
+    FRAME_ALLOCATOR
+        .lock()
+        .init(PhysAddr::from(ekernel as usize).ceil(), PhysAddr::from(MEMORY_END).floor());
 }
 
 pub fn frame_alloc() -> Option<FrameTracker> {
@@ -105,20 +107,22 @@ pub fn frame_alloc() -> Option<FrameTracker> {
         .map(|ppn| FrameTracker::new(ppn))
 }
 
-fn frame_dealloc(ppn: PhysPageNum) {
-    FRAME_ALLOCATOR.lock().dealloc(ppn);
+pub fn frame_dealloc(ppn: PhysPageNum) {
+    FRAME_ALLOCATOR
+        .lock()
+        .dealloc(ppn);
 }
 
 #[test_case]
 pub fn frame_allocator_test() {
     let mut v: Vec<FrameTracker> = Vec::new();
-    for _i in 0..5 {
+    for i in 0..5 {
         let frame = frame_alloc().unwrap();
         println!("{:?}", frame);
         v.push(frame);
     }
     v.clear();
-    for _i in 0..5 {
+    for i in 0..5 {
         let frame = frame_alloc().unwrap();
         println!("{:?}", frame);
         v.push(frame);

@@ -31,5 +31,5 @@ pub fn init() {
     let sd = SDCardWrapper::new();
     let mut cache = [0u8; 512];
     sd.read_block(1, &mut cache);
-    // println!("fs {:?}", cache);
+    println!("fs {:?}", cache);
 }
