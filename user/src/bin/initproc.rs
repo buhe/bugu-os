@@ -14,6 +14,7 @@ use user::{
 #[no_mangle]
 fn main() -> i32 {
     if fork() == 0 {
+        // child process
         exec("user_shell\0");
     } else {
         loop {
