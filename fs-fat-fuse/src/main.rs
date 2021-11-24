@@ -53,41 +53,45 @@ fn easy_fs_pack() -> std::io::Result<()> {
         let f = OpenOptions::new()
             .read(true)
             .write(true)
-            .create(true)
-            .open(format!("{}{}", target_path, "fs.img"))?;
-        f.set_len(8192 * 512).unwrap();
+            // .create(true)
+            .open(target_path)?;
+        // f.set_len(8192 * 512).unwrap();
         f
     })));
+    let mut cache = [0u8; BLOCK_SZ];
+    block_file.read_block(0,&mut cache);
+    println!("{:?}", cache);
+    println!("[fs] Load FAT32");
     // 4MiB, at most 4095 files
-    let efs = EasyFileSystem::create(
-        block_file.clone(),
-        8192,
-        1,
-    );
-    let root_inode = Arc::new(EasyFileSystem::root_inode(&efs));
-    let apps: Vec<_> = read_dir(src_path)
-        .unwrap()
-        .into_iter()
-        .map(|dir_entry| {
-            let mut name_with_ext = dir_entry.unwrap().file_name().into_string().unwrap();
-            name_with_ext.drain(name_with_ext.find('.').unwrap()..name_with_ext.len());
-            name_with_ext
-        })
-        .collect();
-    for app in apps {
-        // load app data from host file system
-        let mut host_file = File::open(format!("{}{}", target_path, app)).unwrap();
-        let mut all_data: Vec<u8> = Vec::new();
-        host_file.read_to_end(&mut all_data).unwrap();
-        // create a file in easy-fs
-        let inode = root_inode.create(app.as_str()).unwrap();
-        // write data to easy-fs
-        inode.write_at(0, all_data.as_slice());
-    }
-    // list apps
-    for app in root_inode.ls() {
-        println!("{}", app);
-    }
+    // let efs = EasyFileSystem::create(
+    //     block_file.clone(),
+    //     8192,
+    //     1,
+    // );
+    // let root_inode = Arc::new(EasyFileSystem::root_inode(&efs));
+    // let apps: Vec<_> = read_dir(src_path)
+    //     .unwrap()
+    //     .into_iter()
+    //     .map(|dir_entry| {
+    //         let mut name_with_ext = dir_entry.unwrap().file_name().into_string().unwrap();
+    //         name_with_ext.drain(name_with_ext.find('.').unwrap()..name_with_ext.len());
+    //         name_with_ext
+    //     })
+    //     .collect();
+    // for app in apps {
+    //     // load app data from host file system
+    //     let mut host_file = File::open(format!("{}{}", target_path, app)).unwrap();
+    //     let mut all_data: Vec<u8> = Vec::new();
+    //     host_file.read_to_end(&mut all_data).unwrap();
+    //     // create a file in easy-fs
+    //     let inode = root_inode.create(app.as_str()).unwrap();
+    //     // write data to easy-fs
+    //     inode.write_at(0, all_data.as_slice());
+    // }
+    // // list apps
+    // for app in root_inode.ls() {
+    //     println!("{}", app);
+    // }
     Ok(())
 }
 

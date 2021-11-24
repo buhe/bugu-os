@@ -29,6 +29,12 @@ env:
 	rustup component add rust-src
 	rustup component add llvm-tools-preview
 
+openfat: $(APPS)
+	@echo "Are you sure write to $(SDCARD) ? [y/N] " && read ans && [ $${ans:-N} = y ]
+	@cd ../user && make build
+	@sudo chown buhe:staff $(SDCARD)
+	@cd ../fs-fat-fuse && cargo run --release -- -s ../user/src/bin/ -t $(SDCARD)
+
 sdcard: $(FS_IMG)
 	@echo "Are you sure write to $(SDCARD) ? [y/N] " && read ans && [ $${ans:-N} = y ]
 	@sudo dd if=/dev/zero of=$(SDCARD) bs=1048576 count=16
