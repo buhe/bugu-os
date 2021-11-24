@@ -1,4 +1,7 @@
 {
     "rust-analyzer.checkOnSave.allTargets": false,
-    "rust-analyzer.cargo.target": "riscv64gc-unknown-none-elf"
+    "editor.formatOnSave": true, // General VSCode setting to allow a formatter, in this case rustfmt, to format text on save
+    "[rust]": { // Tells VSCode to defer to rust-analyzer's formatter (rustfmt) for rust code
+        "editor.defaultFormatter": "matklad.rust-analyzer" //
+    },
 }
