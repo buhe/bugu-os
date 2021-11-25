@@ -1,5 +1,6 @@
 use fs_fat::{
     BlockDevice,
+    FatFileSystem,
 };
 use std::fs::{File, OpenOptions, read_dir};
 use std::io::{Read, Write, Seek, SeekFrom};
@@ -54,6 +55,7 @@ fn easy_fs_pack() -> std::io::Result<()> {
             .read(true)
             .write(true)
             // .create(true)
+            // .open("./fat32.img")?;
             .open(target_path)?;
         // f.set_len(8192 * 512).unwrap();
         f
@@ -61,7 +63,11 @@ fn easy_fs_pack() -> std::io::Result<()> {
     let mut cache = [0u8; BLOCK_SZ];
     block_file.read_block(0,&mut cache);
     println!("{:?}", cache);
+    block_file.read_block(1,&mut cache);
+    println!("{:?}", cache);
     println!("[fs] Load FAT32");
+    let fat = FatFileSystem::open(block_file.clone());
+    println!("{}", fat.lock().sectors_per_cluster);
     // 4MiB, at most 4095 files
     // let efs = EasyFileSystem::create(
     //     block_file.clone(),

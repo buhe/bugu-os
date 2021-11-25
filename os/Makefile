@@ -30,7 +30,6 @@ env:
 	rustup component add llvm-tools-preview
 
 openfat: $(APPS)
-	@echo "Are you sure write to $(SDCARD) ? [y/N] " && read ans && [ $${ans:-N} = y ]
 	@cd ../user && make build
 	@sudo chown buhe:staff $(SDCARD)
 	@cd ../fs-fat-fuse && cargo run --release -- -s ../user/src/bin/ -t $(SDCARD)
