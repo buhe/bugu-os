@@ -9,7 +9,7 @@ use super::{
     // Inode,
     get_block_cache,
 };
-use crate::{BLOCK_SZ, fat_layout::FatBS};
+use crate::{BLOCK_SZ, fat_layout::{FAT, FSInfo, FatBS, FatExtBS}};
 
 pub struct FatFileSystem {
     pub sectors_per_cluster: u32,
@@ -93,8 +93,35 @@ impl FatFileSystem {
             .read(0, |bs:&FatBS| {
                 *bs
             });
-                          let sectors_per_cluster = boot_sec.sectors_per_cluster as u32;
-               let efs = Self {
+        let ext_boot_sec:FatExtBS = get_block_cache(
+            0, 
+            Arc::clone(&block_device))
+            .lock()
+            .read(36, |ebs:&FatExtBS|{
+                *ebs // DEBUG
+            });
+        // 读入 FSInfo
+        let fsinfo = FSInfo::new(ext_boot_sec.fat_info_sec());
+        // 校验签名
+        assert!(fsinfo.check_signature(Arc::clone(&block_device)),"Error loading fat32! Illegal signature");
+        //println!("[fs]: first free cluster = {}", fsinfo.first_free_cluster(block_device.clone()) );
+        
+        let sectors_per_cluster = boot_sec.sectors_per_cluster as u32;
+        let bytes_per_sector = boot_sec.bytes_per_sector as u32;
+        let bytes_per_cluster = sectors_per_cluster * bytes_per_sector;
+
+        //println!("[fs]: bytes per sec = {}", bytes_per_sector);
+        //println!("[fs]: bytes per cluster = {}", bytes_per_cluster);
+
+        let fat_n_sec = ext_boot_sec.fat_size();
+        let fat1_sector = boot_sec.first_fat_sector();
+        let fat2_sector = fat1_sector + fat_n_sec;
+        let fat_n_entry = fat_n_sec * bytes_per_sector / 4;
+        let sectors_per_cluster = boot_sec.sectors_per_cluster as u32;
+        
+        let fat = FAT::new(fat1_sector, fat2_sector, fat_n_sec, fat_n_entry);
+        
+        let efs = Self {
                    sectors_per_cluster
                     // block_device,
                     // inode_bitmap: Bitmap::new(
@@ -109,7 +136,7 @@ impl FatFileSystem {
                     // data_area_start_block: 1 + inode_total_blocks + super_block.data_bitmap_blocks,
                 };
    
-                Arc::new(Mutex::new(efs))      
+        Arc::new(Mutex::new(efs))      
     }
 
     // pub fn root_inode(efs: &Arc<Mutex<Self>>) -> Inode {
