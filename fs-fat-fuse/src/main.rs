@@ -1,7 +1,4 @@
-use fs_fat::{
-    BlockDevice,
-    FatFileSystem,
-};
+use fs_fat::{ATTRIBUTE_ARCHIVE, BlockDevice, FatFileSystem};
 use std::fs::{File, OpenOptions, read_dir};
 use std::io::{Read, Write, Seek, SeekFrom};
 use std::sync::Mutex;
@@ -77,25 +74,28 @@ fn easy_fs_pack() -> std::io::Result<()> {
     //     1,
     // );
     let root_inode = Arc::new(FatFileSystem::root_inode(&fat));
+    let apps: Vec<_> = read_dir("../user/src/bin/")
     // let apps: Vec<_> = read_dir(src_path)
-    //     .unwrap()
-    //     .into_iter()
-    //     .map(|dir_entry| {
-    //         let mut name_with_ext = dir_entry.unwrap().file_name().into_string().unwrap();
-    //         name_with_ext.drain(name_with_ext.find('.').unwrap()..name_with_ext.len());
-    //         name_with_ext
-    //     })
-    //     .collect();
-    // for app in apps {
-    //     // load app data from host file system
-    //     let mut host_file = File::open(format!("{}{}", target_path, app)).unwrap();
-    //     let mut all_data: Vec<u8> = Vec::new();
-    //     host_file.read_to_end(&mut all_data).unwrap();
-    //     // create a file in easy-fs
-    //     let inode = root_inode.create(app.as_str()).unwrap();
-    //     // write data to easy-fs
-    //     inode.write_at(0, all_data.as_slice());
-    // }
+        .unwrap()
+        .into_iter()
+        .map(|dir_entry| {
+            let mut name_with_ext = dir_entry.unwrap().file_name().into_string().unwrap();
+            name_with_ext.drain(name_with_ext.find('.').unwrap()..name_with_ext.len());
+            name_with_ext
+        })
+        .collect();
+    for app in apps {
+        // load app data from host file system
+        let mut host_file = File::open(format!("{}{}", "../user/target/riscv64gc-unknown-none-elf/release/", app)).unwrap();
+        // let mut host_file = File::open(format!("{}{}", target_path, app)).unwrap();
+        let mut all_data: Vec<u8> = Vec::new();
+        host_file.read_to_end(&mut all_data).unwrap();
+        // create a file in easy-fs
+        // todo
+        let inode = root_inode.create(app.as_str(), ATTRIBUTE_ARCHIVE).unwrap();
+        // write data to easy-fs
+        inode.write_at(0, all_data.as_slice());
+    }
     // list apps
     for app in root_inode.ls() {
         println!("{}", app.0);

@@ -16,7 +16,7 @@ pub use block_dev::BlockDevice;
 // pub use efs::EasyFileSystem;
 pub use fat::FatFileSystem;
 pub use vfs::Inode;
-// use layout::*;
+pub use fat_layout::*;
 // use bitmap::Bitmap;
 use block_cache::get_block_cache;
 use fat::ROOT_DIR;

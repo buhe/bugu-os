@@ -1,4 +1,4 @@
-use crate::{FatFileSystem, fat_layout::{DIRENT_SZ, ShortDirEntry}};
+use crate::{ALL_LOWER_CASE, FatFileSystem, fat_layout::{DIRENT_SZ, ShortDirEntry}};
 
 use super::{
     BlockDevice,
@@ -110,6 +110,86 @@ impl Inode {
             ).lock().modify(self.block_offset, f)
         }
     }
+
+    /* 查找可用目录项，返回offset，簇不够也会返回相应的offset，caller需要及时分配 */
+    fn find_free_dirent(&self,fs: &FatFileSystem)->Option<usize>{
+        if !self.is_dir() {
+            return None
+        }
+        let mut offset = 0;
+        loop {
+            let mut tmp_dirent = ShortDirEntry::empty();
+            let read_sz = self.read_dir_entry(|short_ent:&ShortDirEntry|{
+                short_ent.read_at(
+                    offset, 
+                    tmp_dirent.as_bytes_mut(), 
+                   &fs,
+                    &fs.get_fat(),
+                    &self.block_device
+                )
+            });
+            if tmp_dirent.is_empty() || read_sz == 0{
+                return Some(offset)
+            }
+            offset += DIRENT_SZ;
+        }
+    }
+
+       /* 返回sector和offset */
+    pub fn get_pos(&self, offset:usize, fs: &FatFileSystem) -> ( usize, usize){
+        let (_, sec, off) = self.read_dir_entry(|s_ent: &ShortDirEntry|{
+            s_ent.get_pos(
+                offset, 
+                &fs, 
+                &fs.get_fat(), 
+                &self.block_device)
+        });
+        (sec, off)
+    }
+
+    // fn find_short_name(
+    //     &self, 
+    //     name:&str, 
+    //     dir_ent: &ShortDirEntry,
+    //     fs: FatFileSystem
+    // ) -> Option<Inode> {
+    //     let name_upper = name.to_ascii_uppercase();     
+    //     let mut short_ent = ShortDirEntry::empty();
+    //     let mut offset = 0;
+    //     let mut read_sz:usize;
+    //     loop {
+    //         read_sz = dir_ent.read_at(
+    //             offset, 
+    //             short_ent.as_bytes_mut(), 
+    //             &fs, 
+    //             &fs.get_fat(), 
+    //             &self.block_device
+    //         );
+    //         if read_sz != DIRENT_SZ || short_ent.is_empty() {
+    //             return None
+    //         }else{
+    //             if short_ent.is_valid() && name_upper == short_ent.get_name_uppercase() {
+    //                 let (short_sector, short_offset) = self.get_pos(offset);
+    //                 let long_pos_vec:Vec<(usize, usize)> = Vec::new(); 
+    //                 return Some(
+    //                     VFile::new(
+    //                         String::from(name),
+    //                         short_sector, 
+    //                         short_offset, 
+    //                         long_pos_vec,
+    //                         short_ent.attribute(),
+    //                         short_ent.get_size(),
+    //                         self.fs.clone(),
+    //                         self.block_device.clone(),
+    //                     )
+    //                 )
+    //             } else {
+    //                 offset += DIRENT_SZ;
+    //                 continue;
+    //             }
+    //         }
+    //     }
+    // }
 
     // fn find_inode_id(
     //     &self,
@@ -260,6 +340,43 @@ impl Inode {
         }
     }
 
+    /* 在当前目录下创建文件 */ 
+    pub fn create(& self, name: &str, attribute: u8) -> Option<Arc<Inode>> {
+        
+        assert!(self.is_dir());
+        
+        let manager_reader = self.fs.lock();
+        // let (name_, ext_) = manager_reader.split_name_ext(name);
+        // 搜索空处
+        let mut dirent_offset:usize;
+        if let Some(offset) = self.find_free_dirent(&manager_reader){
+            dirent_offset = offset;
+        } else {
+            return None
+        }
+        let mut short_ent = ShortDirEntry::empty();
+    
+        let (name_bytes, ext_bytes) = manager_reader.short_name_format(name);
+        short_ent.initialize(&name_bytes, &ext_bytes, attribute);
+        short_ent.set_case(ALL_LOWER_CASE);
+        // drop(manager_reader);
+        
+        // 写目录项
+        assert_eq!(
+            self._write_at(dirent_offset, short_ent.as_bytes_mut(),&manager_reader),
+            DIRENT_SZ
+        );
+        // 
+        let (block_id, block_offset) = self.get_pos(dirent_offset,&manager_reader);
+        Some(Arc::new(Self::new(
+            block_id as u32,
+            block_offset,
+            self.fs.clone(),
+            self.block_device.clone(),
+        )))
+        
+    }
+
     // pub fn read_at(&self, offset: usize, buf: &mut [u8]) -> usize {
     //     let _fs = self.fs.lock();
     //     self.read_disk_inode(|disk_inode| {
@@ -290,7 +407,21 @@ impl Inode {
 
     pub fn write_at(& self, offset: usize, buf: & [u8])->usize{
         let fs = self.fs.lock();
-        self.increase_size((offset + buf.len()) as u32  );
+        self.increase_size((offset + buf.len()) as u32 ,&fs);
+        self.modify_dir_entry(|short_ent: &mut ShortDirEntry|{
+            short_ent.write_at(
+                offset, 
+                buf, 
+                &fs, 
+                &fs.get_fat(), 
+                &self.block_device
+            )
+        })
+    }
+
+    pub fn _write_at(& self, offset: usize, buf: & [u8],fs: &FatFileSystem)->usize{
+        // let fs = self.fs.lock();
+        self.increase_size((offset + buf.len()) as u32 ,&fs);
         self.modify_dir_entry(|short_ent: &mut ShortDirEntry|{
             short_ent.write_at(
                 offset, 
@@ -305,13 +436,14 @@ impl Inode {
     fn increase_size(
         & self,
         new_size: u32,
+        manager_writer: &FatFileSystem
     ) {  // TODO: return sth when cannot increase
         //println!("===================== in increase =======================");
         //println!("file: {}, newsz = {}", self.get_name(), new_size);
         //println!("try lock");
         let first_cluster = self.first_cluster();
         let old_size = self.get_size();
-        let manager_writer = self.fs.lock();
+        // let manager_writer = self.fs.lock();
         //println!("get lock");
         if new_size <= old_size {
             //println!("oldsz > newsz");
@@ -333,7 +465,7 @@ impl Inode {
         if let Some(cluster) = manager_writer.alloc_cluster(needed) {
             //println!("*** cluster alloc = {}",cluster);
             if first_cluster == 0 { //未分配簇
-                drop(manager_writer);
+                // drop(manager_writer);
                 self.modify_dir_entry(|se:&mut ShortDirEntry|{
                     se.set_first_cluster(cluster);
                 });
@@ -352,7 +484,7 @@ impl Inode {
                 fat_writer.set_next_cluster(final_cluster, cluster, self.block_device.clone());
                 //let allc = fat_writer.get_all_cluster_of(first_cluster, self.block_device.clone());
                 //println!("  finish set next cluster, cluster chain:{:?}", allc);
-                drop(manager_writer);
+                // drop(manager_writer);
             }
             //self.size = new_size;
             self.modify_dir_entry(|se:&mut ShortDirEntry|{

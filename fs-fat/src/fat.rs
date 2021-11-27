@@ -62,20 +62,21 @@ pub fn sectors_per_cluster(&self)->u32{
     }
 
     pub fn open(block_device: Arc<dyn BlockDevice>) -> Arc<Mutex<Self>> {
-           let start_sector:u32 = get_block_cache(
-            0, 
-            Arc::clone(&block_device))
-        .lock()
-        .read(0x1c6, |ssec_bytes:&[u8;4]|{
-            // DEBUG
-            let mut start_sec:u32 = 0;
-            for i in 0..4 {
-                let tmp = ssec_bytes[i] as u32;
-                start_sec = start_sec + (tmp << (8*i));
-                //println!("start sec = {}, buf = {}", start_sec , ssec_bytes[i])
-            }
-            start_sec
-        });
+        // unsupport 
+        //    let start_sector:u32 = get_block_cache(
+        //     0, 
+        //     Arc::clone(&block_device))
+        // .lock()
+        // .read(0x1c6, |ssec_bytes:&[u8;4]|{
+        //     // DEBUG
+        //     let mut start_sec:u32 = 0;
+        //     for i in 0..4 {
+        //         let tmp = ssec_bytes[i] as u32;
+        //         start_sec = start_sec + (tmp << (8*i));
+        //         //println!("start sec = {}, buf = {}", start_sec , ssec_bytes[i])
+        //     }
+        //     start_sec
+        // });
 
         // set_start_sec(start_sector as usize);
 
