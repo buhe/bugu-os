@@ -1,5 +1,4 @@
 use alloc::{string::String, sync::Arc, vec::Vec};
-use spin::Mutex;
 
 use crate::{FatFileSystem, clone_into_array};
 
@@ -242,7 +241,7 @@ impl FAT{
         // 需要对损坏簇作出判断
         // 及时使用备用表
         // 无效或未使用返回0
-        let (fat1_sec,fat2_sec,offset) = self.calculate_pos(cluster);
+        let (fat1_sec,_fat2_sec,offset) = self.calculate_pos(cluster);
         //println!("fat1_sec={} offset = {}", fat1_sec, offset);
         let fat1_rs = get_block_cache(fat1_sec as usize, block_device.clone())
         .lock()
@@ -865,7 +864,7 @@ impl ShortDirEntry{
                 // 读完一个簇
                 //println!("finish writing a cluster");
                 current_cluster = fat_reader.get_next_cluster(current_cluster, Arc::clone(block_device));
-                if current_cluster >= END_CLUSTER { panic!("END_CLUSTER"); break; } //没有下一个簇
+                if current_cluster >= END_CLUSTER { panic!("END_CLUSTER"); } //没有下一个簇
                 // 计算所在扇区
                 //println!("write at current_cluster = {}", current_cluster);
                 current_sector = manager_reader.first_sector_of_cluster(current_cluster);

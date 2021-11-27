@@ -10,7 +10,7 @@ use super::{
     Inode,
     get_block_cache,
 };
-use crate::{BLOCK_SZ, fat_layout::{ATTRIBUTE_DIRECTORY, FAT, FREE_CLUSTER, FSInfo, FatBS, FatExtBS, ShortDirEntry}};
+use crate::{fat_layout::{ATTRIBUTE_DIRECTORY, FAT, FREE_CLUSTER, FSInfo, FatBS, FatExtBS, ShortDirEntry}};
 lazy_static! {
     pub static ref ROOT_DIR: Arc<Mutex<ShortDirEntry>> = {
         // root dir /
@@ -33,7 +33,7 @@ pub struct FatFileSystem {
     // vroot_dirent:Arc<Mutex<ShortDirEntry>>,
 }
 
-type DataBlock = [u8; BLOCK_SZ];
+// type DataBlock = [u8; BLOCK_SZ];
 
 impl FatFileSystem {
 pub fn sectors_per_cluster(&self)->u32{

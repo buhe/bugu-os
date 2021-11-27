@@ -348,7 +348,7 @@ impl Inode {
         let manager_reader = self.fs.lock();
         // let (name_, ext_) = manager_reader.split_name_ext(name);
         // 搜索空处
-        let mut dirent_offset:usize;
+        let dirent_offset:usize;
         if let Some(offset) = self.find_free_dirent(&manager_reader){
             dirent_offset = offset;
         } else {
@@ -407,16 +407,7 @@ impl Inode {
 
     pub fn write_at(& self, offset: usize, buf: & [u8])->usize{
         let fs = self.fs.lock();
-        self.increase_size((offset + buf.len()) as u32 ,&fs);
-        self.modify_dir_entry(|short_ent: &mut ShortDirEntry|{
-            short_ent.write_at(
-                offset, 
-                buf, 
-                &fs, 
-                &fs.get_fat(), 
-                &self.block_device
-            )
-        })
+        self._write_at(offset, buf, &fs)
     }
 
     pub fn _write_at(& self, offset: usize, buf: & [u8],fs: &FatFileSystem)->usize{
