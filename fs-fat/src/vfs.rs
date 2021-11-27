@@ -13,6 +13,7 @@ use alloc::sync::Arc;
 use alloc::string::String;
 use alloc::vec::Vec;
 use spin::{Mutex};
+use crate::ROOT_DIR;
 
 #[allow(unused)]
 pub const ATTRIBUTE_READ_ONLY:u8 = 0x01;
@@ -84,10 +85,10 @@ impl Inode {
         }
     }
 
-    fn read_dir_entry<V>(&self, f: impl FnOnce(&ShortDirEntry) -> V) -> V {
+    fn read_dir_entry<V>(&self,f: impl FnOnce(&ShortDirEntry) -> V) -> V {
         if self.block_id == 0 {
-            let root_dirent = self.fs.lock().get_root_dirent();
-            let rr = root_dirent.lock();
+            let rr = ROOT_DIR.lock();
+            // let rr = root_dirent.lock();
             f(& rr)
         } else {
             get_block_cache(
@@ -97,11 +98,10 @@ impl Inode {
         }
     }
 
-    fn modify_dir_entry<V>(&self, f: impl FnOnce(&mut ShortDirEntry) -> V) -> V {
+    fn modify_dir_entry<V>(&self,f: impl FnOnce(&mut ShortDirEntry) -> V) -> V {
         if self.block_id == 0 {
             //println!("[fs]: modify vroot dent");
-            let root_dirent = self.fs.lock().get_root_dirent();
-            let mut rw = root_dirent.lock();
+            let mut rw = ROOT_DIR.lock();
             f(&mut rw)
         } else {
             get_block_cache(
@@ -236,17 +236,18 @@ impl Inode {
         //     }
         //     v
         // })
+        let fs = self.fs.lock();
         let mut list:Vec<(String, u8)> = Vec::new();
         // DEBUG
         let mut offset:usize = 0;
         let mut short_ent =  ShortDirEntry::empty();
         loop {
-            let mut read_sz = self.read_dir_entry(|curr_ent:&ShortDirEntry|{
+            let read_sz = self.read_dir_entry(|curr_ent:&ShortDirEntry|{
                 curr_ent.read_at(
                     offset, 
                     short_ent.as_bytes_mut(),
-                    &self.fs,
-                    &self.fs.lock().get_fat(),
+                    &fs,
+                    &fs.get_fat(),
                     &self.block_device
                 )
             });
@@ -254,9 +255,8 @@ impl Inode {
             if read_sz != DIRENT_SZ || short_ent.is_empty() { 
                 return list
             }
-                list.push((short_ent.get_name_lowercase(), short_ent.attribute()));  
-                offset += DIRENT_SZ;
-                continue; 
+            list.push((short_ent.get_name_lowercase(), short_ent.attribute()));  
+            offset += DIRENT_SZ;
         }
     }
 
@@ -276,25 +276,27 @@ impl Inode {
     // }
 
     pub fn read_at(&self, offset: usize, buf: &mut [u8])->usize{
+        let fs = self.fs.lock();
         self.read_dir_entry(|short_ent: &ShortDirEntry|{
             short_ent.read_at(
                 offset, 
                 buf, 
-                &self.fs,
-                &self.fs.lock().get_fat(), 
+                &fs,
+                &fs.get_fat(), 
                 &self.block_device
             )
         })
     }   
 
     pub fn write_at(& self, offset: usize, buf: & [u8])->usize{
+        let fs = self.fs.lock();
         self.increase_size((offset + buf.len()) as u32  );
         self.modify_dir_entry(|short_ent: &mut ShortDirEntry|{
             short_ent.write_at(
                 offset, 
                 buf, 
-                &self.fs, 
-                &self.fs.lock().get_fat(), 
+                &fs, 
+                &fs.get_fat(), 
                 &self.block_device
             )
         })
@@ -343,7 +345,7 @@ impl Inode {
                 //println!("  cluster alloc = {}",cluster);
                 let fat = manager_writer.get_fat();
                 //println!("try lock1");
-                let fat_writer = fat.lock();
+                let fat_writer = fat;
                 //println!("get lock1");
                 let final_cluster = fat_writer.final_cluster(first_cluster, self.block_device.clone());
                 assert_ne!( cluster, 0);

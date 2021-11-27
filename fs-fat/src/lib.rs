@@ -19,6 +19,7 @@ pub use vfs::Inode;
 // use layout::*;
 // use bitmap::Bitmap;
 use block_cache::get_block_cache;
+use fat::ROOT_DIR;
 
 pub fn clone_into_array<A, T>(slice: &[T]) -> A
 where

@@ -1,5 +1,6 @@
 use alloc::{string::String, sync::Arc, vec::Vec};
 use spin::Mutex;
+use lazy_static::*;
 use super::{
     BlockDevice,
     // Bitmap,
@@ -10,18 +11,26 @@ use super::{
     get_block_cache,
 };
 use crate::{BLOCK_SZ, fat_layout::{ATTRIBUTE_DIRECTORY, FAT, FREE_CLUSTER, FSInfo, FatBS, FatExtBS, ShortDirEntry}};
-
+lazy_static! {
+    pub static ref ROOT_DIR: Arc<Mutex<ShortDirEntry>> = {
+        // root dir /
+        let mut root_dirent = ShortDirEntry::new(&[0x2F,0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20], &[0x20, 0x20, 0x20], ATTRIBUTE_DIRECTORY);
+        // root dir data from 2 cluter start
+        root_dirent.set_first_cluster(2);
+        Arc::new(Mutex::new(root_dirent))
+    };
+}
 pub struct FatFileSystem {
     block_device: Arc<dyn BlockDevice>,
     fsinfo: Arc<FSInfo>,
     sectors_per_cluster: u32,
     bytes_per_sector: u32,
     bytes_per_cluster: u32,
-    fat: Arc<Mutex<FAT>>,
+    fat: Arc<FAT>,
     root_sec: u32,
     #[allow(unused)]
     total_sectors: u32, //总扇区数
-    vroot_dirent:Arc<Mutex<ShortDirEntry>>,
+    // vroot_dirent:Arc<Mutex<ShortDirEntry>>,
 }
 
 type DataBlock = [u8; BLOCK_SZ];
@@ -103,20 +112,16 @@ pub fn sectors_per_cluster(&self)->u32{
         
         let fat = FAT::new(fat1_sector, fat2_sector, fat_n_sec, fat_n_entry);
         let root_sec = boot_sec.table_count as u32 * fat_n_sec + boot_sec.reserved_sector_count as u32;
-        // root dir /
-        let mut root_dirent = ShortDirEntry::new(&[0x2F,0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20], &[0x20, 0x20, 0x20], ATTRIBUTE_DIRECTORY);
-        // root dir data from 2 cluter start
-        root_dirent.set_first_cluster(2);
+        
         let efs = Self {
                    block_device,
             fsinfo: Arc::new(fsinfo),
             sectors_per_cluster,
             bytes_per_sector,
             bytes_per_cluster,
-            fat: Arc::new(Mutex::new(fat)),
+            fat: Arc::new(fat),
             root_sec,
-            total_sectors: boot_sec.total_sectors(), 
-            vroot_dirent: Arc::new(Mutex::new(root_dirent)),
+            total_sectors: boot_sec.total_sectors()
                 };
    
         Arc::new(Mutex::new(efs))      
@@ -135,9 +140,9 @@ pub fn sectors_per_cluster(&self)->u32{
         )
     }
 
-    pub fn get_root_dirent(&self)->Arc<Mutex<ShortDirEntry>>{
-        self.vroot_dirent.clone()
-    }
+    // pub fn get_root_dirent(&self)->Arc<Mutex<ShortDirEntry>>{
+    //     self.vroot_dirent.clone()
+    // }
 
     // pub fn get_disk_inode_pos(&self, inode_id: u32) -> (u32, usize) {
     //     let inode_size = core::mem::size_of::<DiskInode>();
@@ -182,7 +187,7 @@ pub fn sectors_per_cluster(&self)->u32{
             return None
         }
         // 获取FAT写锁
-        let fat_writer = self.fat.lock();
+        let fat_writer = &self.fat;
         let prev_cluster = self.fsinfo.first_free_cluster(self.block_device.clone());
         //fat_writer.set_next_cluster(current_cluster, next_cluster, self.block_device.clone());
         //let mut cluster_vec:Vec<u32> = Vec::new();
@@ -218,7 +223,7 @@ pub fn sectors_per_cluster(&self)->u32{
     }
 
     pub fn dealloc_cluster(&self, clusters:Vec<u32>) {
-        let fat_writer = self.fat.lock();
+        let fat_writer = &self.fat;
         let free_clusters = self.free_clusters();
         let num = clusters.len();
         for i in 0..num {
@@ -254,7 +259,7 @@ pub fn sectors_per_cluster(&self)->u32{
         }
     }
 
-    pub fn get_fat(&self)->Arc<Mutex<FAT>>{
+    pub fn get_fat(&self)->Arc<FAT>{
         Arc::clone(&self.fat)
     }
 
@@ -271,7 +276,7 @@ pub fn sectors_per_cluster(&self)->u32{
         }else{
             if is_dir {
                 //println!("count old_clusters");
-                let old_clusters = self.fat.lock().count_claster_num(first_cluster, self.block_device.clone());
+                let old_clusters = self.fat.count_claster_num(first_cluster, self.block_device.clone());
                 //println!("first cluster = {}, old_clusters = {}, new_clusters = {}", first_cluster, old_clusters, self.size_to_clusters(new_size));
                 // DEBUG 这里有问题 ?
                 self.size_to_clusters(new_size) - old_clusters

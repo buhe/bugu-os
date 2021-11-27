@@ -649,12 +649,12 @@ impl ShortDirEntry{
     pub fn get_pos(
         &self,
         offset: usize,
-        manager: &Arc<Mutex<FatFileSystem>>, 
-        fat: &Arc<Mutex<FAT>>,
+        manager: &FatFileSystem, 
+        fat: &Arc<FAT>,
         block_device: &Arc<dyn BlockDevice>,
     )->(u32, usize, usize) {
-        let manager_reader = manager.lock();
-        let fat_reader = fat.lock();
+        let manager_reader = manager;
+        let fat_reader = fat;
         let bytes_per_sector = manager_reader.bytes_per_sector() as usize;
         let bytes_per_cluster = manager_reader.bytes_per_cluster() as usize;
         let cluster_index = manager_reader.cluster_of_offset(offset);
@@ -675,14 +675,14 @@ impl ShortDirEntry{
         &self,
         offset: usize,
         buf: &mut [u8],
-        manager: &Arc<Mutex<FatFileSystem>>, 
-        fat: &Arc<Mutex<FAT>>,
+        manager: &FatFileSystem, 
+        fat: &Arc<FAT>,
         block_device: &Arc<dyn BlockDevice>,
     ) -> usize {
         //println!("========================================================\nin read_at self.first_cluster={}", self.first_cluster());
         // 获取共享锁
-        let manager_reader = manager.lock();
-        let fat_reader = fat.lock();
+        let manager_reader = manager;
+        let fat_reader = fat;
         let bytes_per_sector = manager_reader.bytes_per_sector() as usize;
         let bytes_per_cluster = manager_reader.bytes_per_cluster() as usize;
         let mut current_off = offset;
@@ -703,7 +703,7 @@ impl ShortDirEntry{
         // let cluster_index = manager_reader.cluster_of_offset(offset);
         let (c_clu, c_sec, _) = self.get_pos(
             offset, manager, 
-            &manager_reader.get_fat(), 
+            fat, 
             block_device
         );
         //println!("curr_clu = {} sec = {}", c_clu, c_sec);
@@ -781,14 +781,14 @@ impl ShortDirEntry{
         &self,
         offset: usize,
         buf: & [u8],
-        manager: &Arc<Mutex<FatFileSystem>>, 
-        fat: &Arc<Mutex<FAT>>,
+        manager: &FatFileSystem, 
+        fat: &Arc<FAT>,
         block_device: &Arc<dyn BlockDevice>,
     ) -> usize {
         //println!("in w_short");
         // 获取共享锁
-        let manager_reader = manager.lock();
-        let fat_reader = fat.lock();
+        let manager_reader = manager;
+        let fat_reader = fat;
         let bytes_per_sector = manager_reader.bytes_per_sector() as usize;
         let bytes_per_cluster = manager_reader.bytes_per_cluster() as usize;
         let mut current_off = offset;
