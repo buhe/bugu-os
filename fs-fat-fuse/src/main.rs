@@ -94,7 +94,10 @@ fn easy_fs_pack() -> std::io::Result<()> {
         let inode = root_inode.create(app.as_str(), ATTRIBUTE_ARCHIVE);
         // write data to easy-fs
         match inode {
-            Some(i) => {i.write_at(0, all_data.as_slice());},
+            Some(i) => {
+                println!("create {}", &app);
+                i.write_at(0, all_data.as_slice());
+            },
             None => {println!("Not create app.")},
         }
         
@@ -106,13 +109,18 @@ fn easy_fs_pack() -> std::io::Result<()> {
     let hello_app = root_inode.find("hello").unwrap();
     hello_app.read_at(0, &mut cache);
     println!("hello app data {:?}", cache);  
-    hello_app.clear();
-    println!("clear hello app");
-    let hello_clear = root_inode.find("hello");
-     match hello_clear {
-            Some(_) => {},
-            None => {println!("can not found hello..")},
-        }
+    // hello_app.clear();
+    // // write_dev();
+    // println!("clear hello app");
+    // assert_eq!(
+    //         hello_app.read_at(0, &mut cache),
+    //         0,
+    //     );
+    // let hello_clear = root_inode.find("hello");
+    //  match hello_clear {
+    //         Some(_) => {println!("hello alreadly found..")},
+    //         None => {println!("can not found hello..")},
+    //     }
     Ok(())
 }
 

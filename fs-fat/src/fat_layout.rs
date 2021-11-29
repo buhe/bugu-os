@@ -633,7 +633,7 @@ impl ShortDirEntry{
     /* 清空文件，删除时使用 */
     pub fn clear(&mut self){
         self.size = 0;
-        //self.name[0] = 0xE5;
+        self.name[0] = 0xE5;
         self.set_first_cluster(0);
     }
 
