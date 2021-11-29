@@ -92,9 +92,13 @@ fn easy_fs_pack() -> std::io::Result<()> {
         host_file.read_to_end(&mut all_data).unwrap();
         // create a file in easy-fs
         // todo
-        let inode = root_inode.create(app.as_str(), ATTRIBUTE_ARCHIVE).unwrap();
+        let inode = root_inode.create(app.as_str(), ATTRIBUTE_ARCHIVE);
         // write data to easy-fs
-        inode.write_at(0, all_data.as_slice());
+        match inode {
+            Some(i) => {i.write_at(0, all_data.as_slice());},
+            None => {},
+        }
+        
     }
     // list apps
     for app in root_inode.ls() {

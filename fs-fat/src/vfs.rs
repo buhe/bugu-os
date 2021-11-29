@@ -379,6 +379,9 @@ impl Inode {
     pub fn create(& self, name: &str, attribute: u8) -> Option<Arc<Inode>> {
         
         assert!(self.is_dir());
+        if self.find(name).is_some() {
+            return None;
+        }
         
         let manager_reader = self.fs.lock();
         // let (name_, ext_) = manager_reader.split_name_ext(name);
