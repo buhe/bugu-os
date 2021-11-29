@@ -87,7 +87,7 @@ impl Inode {
 
     fn read_dir_entry<V>(&self,f: impl FnOnce(&ShortDirEntry) -> V) -> V {
         if self.block_id == 0 {
-            let rr = ROOT_DIR.lock();
+            let rr = ROOT_DIR.read();
             // let rr = root_dirent.lock();
             f(& rr)
         } else {
@@ -101,7 +101,7 @@ impl Inode {
     fn modify_dir_entry<V>(&self,f: impl FnOnce(&mut ShortDirEntry) -> V) -> V {
         if self.block_id == 0 {
             //println!("[fs]: modify vroot dent");
-            let mut rw = ROOT_DIR.lock();
+            let mut rw = ROOT_DIR.write();
             f(&mut rw)
         } else {
             get_block_cache(
@@ -216,7 +216,42 @@ impl Inode {
     //     None
     // }
 
-    // pub fn find(&self, name: &str) -> Option<Arc<Inode>> {
+    pub fn find(&self, name: &str) -> Option<Arc<Inode>> {
+        let fs = self.fs.lock();
+        self.read_dir_entry(|dir_ent:&ShortDirEntry|{
+            let name_upper = name.to_ascii_uppercase();     
+            let mut sub_entry = ShortDirEntry::empty();
+            let mut offset = 0;
+            let mut read_sz:usize;
+            loop {
+                read_sz = dir_ent.read_at(
+                    offset, 
+                    sub_entry.as_bytes_mut(), 
+                    &fs, 
+                    &fs.get_fat(), 
+                    &self.block_device
+                );
+                if read_sz != DIRENT_SZ || sub_entry.is_empty() {
+                    return None
+                }else{
+                    if sub_entry.is_valid() && name_upper == sub_entry.get_name_uppercase() {
+                        let (short_sector, short_offset) = self.get_pos(offset, &fs);
+                        return Some(Arc::new(
+                            Inode::new(
+                                short_sector as u32, 
+                                short_offset,
+                                self.fs.clone(),
+                                self.block_device.clone(),
+                            )
+                        )
+                        )
+                    } else {
+                        offset += DIRENT_SZ;
+                        continue;
+                    }
+                }
+            }
+        })
     //     let fs = self.fs.lock();
     //     self.read_disk_inode(|disk_inode| {
     //         self.find_inode_id(name, disk_inode)
@@ -230,7 +265,7 @@ impl Inode {
     //             ))
     //         })
     //     })
-    // }
+    }
 
     // fn increase_size(
     //     &self,

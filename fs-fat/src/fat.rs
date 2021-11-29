@@ -1,5 +1,5 @@
 use alloc::{string::String, sync::Arc, vec::Vec};
-use spin::Mutex;
+use spin::{Mutex, RwLock};
 use lazy_static::*;
 use super::{
     BlockDevice,
@@ -12,12 +12,12 @@ use super::{
 };
 use crate::{fat_layout::{ATTRIBUTE_DIRECTORY, FAT, FREE_CLUSTER, FSInfo, FatBS, FatExtBS, ShortDirEntry}};
 lazy_static! {
-    pub static ref ROOT_DIR: Arc<Mutex<ShortDirEntry>> = {
+    pub static ref ROOT_DIR: Arc<RwLock<ShortDirEntry>> = {
         // root dir /
         let mut root_dirent = ShortDirEntry::new(&[0x2F,0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20], &[0x20, 0x20, 0x20], ATTRIBUTE_DIRECTORY);
         // root dir data from 2 cluter start
         root_dirent.set_first_cluster(2);
-        Arc::new(Mutex::new(root_dirent))
+        Arc::new(RwLock::new(root_dirent))
     };
 }
 pub struct FatFileSystem {

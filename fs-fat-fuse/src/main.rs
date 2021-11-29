@@ -1,4 +1,4 @@
-use fs_fat::{ATTRIBUTE_ARCHIVE, BlockDevice, FatFileSystem};
+use fs_fat::{ATTRIBUTE_ARCHIVE, BlockDevice, FatFileSystem, ROOT_DIR};
 use std::fs::{File, OpenOptions, read_dir};
 use std::io::{Read, Write, Seek, SeekFrom};
 use std::sync::Mutex;
@@ -59,10 +59,10 @@ fn easy_fs_pack() -> std::io::Result<()> {
         f
     })));
     let mut cache = [0u8; BLOCK_SZ];
-    block_file.read_block(0,&mut cache);
-    println!("{:?}", cache);
-    block_file.read_block(1,&mut cache);
-    println!("{:?}", cache);
+    // block_file.read_block(0,&mut cache);
+    // println!("{:?}", cache);
+    // block_file.read_block(1,&mut cache);
+    // println!("{:?}", cache);
     println!("[fs] Load FAT32");
     let fat = FatFileSystem::open(block_file.clone());
 
@@ -98,8 +98,11 @@ fn easy_fs_pack() -> std::io::Result<()> {
     }
     // list apps
     for app in root_inode.ls() {
-        println!("{}", app.0);
+        println!("app: {}", app.0);
     }
+    let hello_app = root_inode.find("hello").unwrap();
+    hello_app.read_at(0, &mut cache);
+    println!("hello app data {:?}", cache);  
     Ok(())
 }
 
