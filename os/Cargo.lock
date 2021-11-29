@@ -72,7 +72,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "fs-demo"
+name = "fs-fat"
 version = "0.1.0"
 dependencies = [
  "lazy_static",
@@ -181,7 +181,7 @@ dependencies = [
  "bitflags",
  "buddy_system_allocator",
  "device_tree",
- "fs-demo",
+ "fs-fat",
  "infrared",
  "k210-hal",
  "k210-pac",

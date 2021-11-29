@@ -415,6 +415,22 @@ impl Inode {
         
     }
 
+     pub fn clear(&self){
+        let first_cluster:u32 = self.first_cluster();
+        if self.is_dir() || first_cluster == 0 {
+            return;
+        }
+        self.modify_dir_entry(|short_ent:&mut ShortDirEntry|{
+            short_ent.clear();
+        });
+        let fs = self.fs.lock();
+        let all_clusters = fs
+            .get_fat()
+            .get_all_cluster_of(first_cluster, self.block_device.clone());
+        fs.dealloc_cluster(all_clusters);
+    }
+
+
     // pub fn read_at(&self, offset: usize, buf: &mut [u8]) -> usize {
     //     let _fs = self.fs.lock();
     //     self.read_disk_inode(|disk_inode| {

@@ -2,7 +2,7 @@ mod sdcard;
 
 use lazy_static::*;
 use alloc::sync::Arc;
-use fs_demo::BlockDevice;
+use fs_fat::BlockDevice;
 
 type BlockDeviceImpl = sdcard::SDCardWrapper;
 

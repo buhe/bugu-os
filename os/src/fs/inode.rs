@@ -1,5 +1,6 @@
-use fs_demo::{
-    EasyFileSystem,
+use fs_fat::{
+    ATTRIBUTE_ARCHIVE,
+    FatFileSystem,
     Inode,
 };
 use crate::driver::BLOCK_DEVICE;
@@ -55,15 +56,15 @@ impl OSInode {
 
 lazy_static! {
     pub static ref ROOT_INODE: Arc<Inode> = {
-        let efs = EasyFileSystem::open(BLOCK_DEVICE.clone());
-        Arc::new(EasyFileSystem::root_inode(&efs))
+        let efs = FatFileSystem::open(BLOCK_DEVICE.clone());
+        Arc::new(FatFileSystem::root_inode(&efs))
     };
 }
 
 pub fn list_apps() {
     println!("/**** APPS ****");
     for app in ROOT_INODE.ls() {
-        println!("{}", app);
+        println!("{}", app.0);
     }
     println!("**************/");
 }
@@ -105,7 +106,7 @@ pub fn open_file(name: &str, flags: OpenFlags) -> Option<Arc<OSInode>> {
             )))
         } else {
             // create file
-            ROOT_INODE.create(name)
+            ROOT_INODE.create(name, ATTRIBUTE_ARCHIVE)
                 .map(|inode| {
                     Arc::new(OSInode::new(
                         readable,
