@@ -1,4 +1,4 @@
-use fs_fat::{ATTRIBUTE_ARCHIVE, BlockDevice, FatFileSystem, ROOT_DIR};
+use fs_fat::{ATTRIBUTE_ARCHIVE, BlockDevice, FatFileSystem};
 use std::fs::{File, OpenOptions, read_dir};
 use std::io::{Read, Write, Seek, SeekFrom};
 use std::sync::Mutex;
@@ -30,31 +30,31 @@ fn main() {
 }
 
 fn easy_fs_pack() -> std::io::Result<()> {
-    // let matches = App::new("EasyFileSystem packer")
-    //     .arg(Arg::with_name("source")
-    //         .short("s")
-    //         .long("source")
-    //         .takes_value(true)
-    //         .help("Executable source dir(with backslash)")
-    //     )
-    //     .arg(Arg::with_name("target")
-    //         .short("t")
-    //         .long("target")
-    //         .takes_value(true)
-    //         .help("Executable target dir(with backslash)")    
-    //     )
-    //     .get_matches();
-    // let src_path = matches.value_of("source").unwrap();
-    // let target_path = matches.value_of("target").unwrap();
-    // println!("src_path = {}\ntarget_path = {}", src_path, target_path);
+    let matches = App::new("Fat32FileSystem packer")
+        .arg(Arg::with_name("source")
+            .short("s")
+            .long("source")
+            .takes_value(true)
+            .help("Executable source dir(with backslash)")
+        )
+        .arg(Arg::with_name("target")
+            .short("t")
+            .long("target")
+            .takes_value(true)
+            .help("Executable target dir(with backslash)")    
+        )
+        .get_matches();
+    let src_path = matches.value_of("source").unwrap();
+    let target_path = matches.value_of("target").unwrap();
+    println!("src_path = {}\ntarget_path = {}", src_path, target_path);
     let block_file = Arc::new(BlockFile(Mutex::new({
         let f = OpenOptions::new()
             .read(true)
             .write(true)
             // .create(true)
             // .open("./fat32.img")?;
-            .open("/dev/disk2")?;
-            // .open(target_path)?;
+            // .open("/dev/disk2")?;
+            .open(target_path)?;
         // f.set_len(8192 * 512).unwrap();
         f
     })));
@@ -74,8 +74,8 @@ fn easy_fs_pack() -> std::io::Result<()> {
     //     1,
     // );
     let root_inode = Arc::new(FatFileSystem::root_inode(&fat));
-    let apps: Vec<_> = read_dir("../user/src/bin/")
-    // let apps: Vec<_> = read_dir(src_path)
+    // let apps: Vec<_> = read_dir("../user/src/bin/")
+    let apps: Vec<_> = read_dir(src_path)
         .unwrap()
         .into_iter()
         .map(|dir_entry| {
