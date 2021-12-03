@@ -119,9 +119,9 @@ where
 
     pub fn list(&mut self) -> Result<(), S::Error> {
         self.port.write_all(b"AT+CWMODE=1\r\n")?;
-        usleep(10 * 1_000_000);
+        usleep(2_000_000);
         self.port.write_all(b"AT+CWLAP\r\n")?;
-        usleep(10 * 1_000_000);
+        usleep(2_000_000);
         Ok(())
     }
 

@@ -65,6 +65,7 @@ pub fn trap_from_kernel() -> ! {
 pub fn enable_timer_interrupt() {
     unsafe {
         sie::set_stimer();
+        sie::set_sext();
     }
 }
 
@@ -96,6 +97,9 @@ pub fn trap_handler() -> ! {
         Trap::Interrupt(Interrupt::SupervisorTimer) => {
             set_next_trigger();
             suspend_current_and_run_next();
+        }
+        Trap::Interrupt(Interrupt::SupervisorExternal) => {
+            println!(".!!!...");
         }
         _ => {
             panic!(

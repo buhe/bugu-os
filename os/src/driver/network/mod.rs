@@ -1,3 +1,5 @@
+use crate::driver::network::response::ConnectionType;
+
 use self::{handler::SerialNetworkHandler, traits::Write};
 use k210_hal::{
     prelude::*,
@@ -43,15 +45,15 @@ fn init_io() {
     fpioa::set_function(io::WIFI_TX, fpioa::function::UART1_RX);
     fpioa::set_function(io::WIFI_EN, fpioa::function::GPIOHS8);
     fpioa::set_io_pull(io::WIFI_EN, fpioa::pull::DOWN);
-    gpiohs::set_direction(8, gpio::direction::OUTPUT);
-    gpiohs::set_pin(8, true);
+    // gpiohs::set_direction(8, gpio::direction::OUTPUT);
+    // gpiohs::set_pin(8, true);
 }
 
 pub fn init() {
     let p = Peripherals::take().unwrap();
-    sysctl::pll_set_freq(sysctl::pll::PLL0, 800_000_000).unwrap();
-    sysctl::pll_set_freq(sysctl::pll::PLL1, 300_000_000).unwrap();
-    sysctl::pll_set_freq(sysctl::pll::PLL2, 45_158_400).unwrap();
+    // sysctl::pll_set_freq(sysctl::pll::PLL0, 800_000_000).unwrap();
+    // sysctl::pll_set_freq(sysctl::pll::PLL1, 300_000_000).unwrap();
+    // sysctl::pll_set_freq(sysctl::pll::PLL2, 45_158_400).unwrap();
     let clocks = k210_hal::clock::Clocks::new();
     usleep(200000);
     init_io();
@@ -59,12 +61,14 @@ pub fn init() {
     let uart1 = p.UART1.configure(DEFAULT_BAUD.bps(), &clocks);
     let (tx, mut rx) = uart1.split();
     let mut wa = WA::new(tx);
-    let mut h = SerialNetworkHandler::new(&mut wa, "".as_bytes(), "".as_bytes());
+    let mut h = SerialNetworkHandler::new(&mut wa, "Xiaomi_85FE".as_bytes(), "".as_bytes());
     usleep(1_000_000);
     h.start(false).unwrap();
-    usleep(2 * 1_000_000);
+    usleep(1_000_000);
     h.list().unwrap();
+    // h.connect(ConnectionType.TCP, addr, port)
     println!("inited netword");
+    // usleep(10 * 10000000);
     loop {
         let u = rx.try_read().unwrap();
         println!("{}", u as char);
