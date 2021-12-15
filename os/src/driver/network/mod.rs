@@ -57,7 +57,6 @@ pub fn init() {
     let clocks = k210_hal::clock::Clocks::new();
     usleep(200000);
     init_io();
-
     let uart1 = p.UART1.configure(DEFAULT_BAUD.bps(), &clocks);
     let (tx, mut rx) = uart1.split();
     let mut wa = WA::new(tx);
@@ -69,8 +68,8 @@ pub fn init() {
     // h.connect(ConnectionType.TCP, addr, port)
     println!("inited netword");
     // usleep(10 * 10000000);
-    loop {
-        let u = rx.try_read().unwrap();
-        println!("{}", u as char);
-    }
+    // loop {
+    //     let u = rx.try_read().unwrap();
+    //     println!("{}", u as char);
+    // }
 }
