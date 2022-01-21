@@ -2,13 +2,13 @@ mod gpio;
 mod block;
 // mod ir;
 mod epaper;
-mod network;
+// mod network;
 pub fn init() {
     gpio::init();
     epaper::init();
     // lcd::init();
     // ir::init();
-    network::init();
+    // network::init();
 }
 pub use epaper::print_with_lcd;
 pub use epaper::flush;
